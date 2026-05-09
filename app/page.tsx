@@ -1264,12 +1264,50 @@ export default function Home() {
           });
         }
       )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "likes" },
+        (payload) => {
+          const postId = (payload.new as any).post_id;
+          setLikesCount((prev) => {
+            const next = new Map(prev);
+            next.set(postId, (next.get(postId) || 0) + 1);
+            return next;
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "likes" },
+        (payload) => {
+          const postId = (payload.old as any).post_id;
+          setLikesCount((prev) => {
+            const next = new Map(prev);
+            next.set(postId, Math.max(0, (next.get(postId) || 0) - 1));
+            return next;
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "replies" },
+        (payload) => {
+          const postId = (payload.new as any).post_id;
+          setReplyCounts((prev) => {
+            const next = new Map(prev);
+            next.set(postId, (next.get(postId) || 0) + 1);
+            return next;
+          });
+          setRepliesMap((prev) => {
+            const next = new Map(prev);
+            if (next.has(postId)) {
+              next.set(postId, [...(next.get(postId) || []), payload.new]);
+            }
+            return next;
+          });
+        }
+      )
       .subscribe();
-
-    return () => {
-      listener.subscription.unsubscribe();
-      supabase.removeChannel(channel);
-    };
   }, []);
 
   if (sessionLoading) {
