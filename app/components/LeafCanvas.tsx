@@ -2,18 +2,42 @@
 
 import { useEffect, useRef } from "react";
 
+// Define the type for a petal
+interface Petal {
+  x: number;
+  y: number;
+  sz: number;
+  vx: number;
+  vy: number;
+  rot: number;
+  rotV: number;
+  swing: number;
+  swingS: number;
+  swingA: number;
+  alpha: number;
+  ox: number;
+  oy: number;
+  dvx: number;
+  dvy: number;
+  r: number;
+  w: number;
+}
+
 export default function LeafCanvas() {
-  const canvasRef = useRef(null);
-  const animationRef = useRef(null);
-  const petalsRef = useRef([]);
-  const mouseRef = useRef({ x: -9999, y: -9999 });
-  const dimensionsRef = useRef({ W: 0, H: 0 });
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const animationRef = useRef<number | null>(null);
+  const petalsRef = useRef<Petal[]>([]);
+  const mouseRef = useRef<{ x: number; y: number }>({ x: -9999, y: -9999 });
+  const dimensionsRef = useRef<{ W: number; H: number }>({ W: 0, H: 0 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
+    if (!canvas) return;
 
-    const rand = (a, b) => Math.random() * (b - a) + a;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const rand = (a: number, b: number) => Math.random() * (b - a) + a;
 
     const resize = () => {
       dimensionsRef.current.W = window.innerWidth;
@@ -22,7 +46,7 @@ export default function LeafCanvas() {
       canvas.height = dimensionsRef.current.H;
     };
 
-    const createPetal = () => {
+    const createPetal = (): Petal => {
       const sz = rand(3, 10);
       return {
         x: rand(0, dimensionsRef.current.W),
@@ -50,7 +74,7 @@ export default function LeafCanvas() {
       petalsRef.current = Array.from({ length: N }, createPetal);
     };
 
-    const drawPetal = (p) => {
+    const drawPetal = (p: Petal) => {
       ctx.save();
       const px = p.x + p.ox;
       const py = p.y + p.oy;
@@ -146,7 +170,7 @@ export default function LeafCanvas() {
       animationRef.current = requestAnimationFrame(animate);
     };
 
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e: MouseEvent) => {
       mouseRef.current.x = e.clientX;
       mouseRef.current.y = e.clientY;
     };

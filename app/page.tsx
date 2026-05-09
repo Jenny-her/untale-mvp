@@ -1,752 +1,3 @@
-// // "use client";
-
-// // import { useEffect, useState } from "react";
-// // import { supabase } from "../lib/supabase";
-
-// // type Post = {
-// //   id: number;
-// //   content: string;
-// //   anonymous_id: string;
-// //   display_name: string;
-// //   created_at: string;
-// // };
-
-// // export default function Home() {
-// //   const [posts, setPosts] = useState<Post[]>([]);
-// //   const [text, setText] = useState("");
-
-// //   const generateName = () => {
-// //     const words = [
-// //       "petal",
-// //       "nova",
-// //       "echo",
-// //       "mist",
-// //       "leaf",
-// //       "ember",
-// //       "orbit",
-// //       "luna",
-// //       "river",
-// //       "cloud"
-// //     ];
-
-// //     const word = words[Math.floor(Math.random() * words.length)];
-// //     const number = Math.floor(100 + Math.random() * 900);
-
-// //     return word + number;
-// //   };
-
-// //   const timeAgo = (dateString: string) => {
-// //     const seconds = Math.floor(
-// //       (new Date().getTime() - new Date(dateString).getTime()) / 1000
-// //     );
-
-// //     let interval = seconds / 3600;
-
-// //     if (interval > 24) {
-// //       return new Date(dateString).toLocaleString(undefined, {
-// //         day: "numeric",
-// //         month: "short"
-// //       });
-// //     }
-
-// //     if (interval >= 1) {
-// //       return Math.floor(interval) + "h ago";
-// //     }
-
-// //     interval = seconds / 60;
-
-// //     if (interval >= 1) {
-// //       return Math.floor(interval) + "m ago";
-// //     }
-
-// //     return "just now";
-// //   };
-
-// //   const loadPosts = async () => {
-// //     const { data, error } = await supabase
-// //       .from("posts")
-// //       .select("*")
-// //       .order("created_at", { ascending: false });
-
-// //     if (error) {
-// //       console.log(error);
-// //       return;
-// //     }
-
-// //     if (data) {
-// //       setPosts(data);
-// //     }
-// //   };
-
-// //   const createPost = async () => {
-// //     if (!text.trim()) return;
-
-// //     let anonId = localStorage.getItem("anon_id");
-// //     let displayName = localStorage.getItem("display_name");
-
-// //     if (!anonId || !displayName) {
-// //       // anonId = crypto.randomUUID();
-// //       anonId =
-// //         crypto?.randomUUID?.() || Math.random().toString(36).substring(2);
-// //       displayName = generateName();
-
-// //       localStorage.setItem("anon_id", anonId);
-// //       localStorage.setItem("display_name", displayName);
-// //     }
-
-// //     const { error } = await supabase.from("posts").insert([
-// //       {
-// //         content: text.trim(),
-// //         anonymous_id: anonId,
-// //         display_name: displayName
-// //       }
-// //     ]);
-
-// //     if (error) {
-// //       console.log("INSERT ERROR:", error);
-// //       return;
-// //     }
-
-// //     setText("");
-// //     await loadPosts();
-// //   };
-
-// //   useEffect(() => {
-// //     loadPosts();
-// //   }, []);
-
-// //   return (
-// //     <div
-// //       style={{
-// //         padding: "40px",
-// //         maxWidth: "600px",
-// //         margin: "auto"
-// //       }}
-// //     >
-// //       <h1>UnTale</h1>
-
-// //       <textarea
-// //         value={text}
-// //         onChange={(e) => setText(e.target.value)}
-// //         placeholder="Say something anonymously..."
-// //         style={{
-// //           width: "100%",
-// //           height: "100px",
-// //           padding: "10px",
-// //           marginTop: "20px"
-// //         }}
-// //       />
-
-// //       <button
-// //         onClick={createPost}
-// //         style={{
-// //           marginTop: "10px",
-// //           padding: "10px",
-// //           width: "100%",
-// //           cursor: "pointer"
-// //         }}
-// //       >
-// //         Post
-// //       </button>
-
-// //       <div style={{ marginTop: "40px" }}>
-// //         {posts.map((p) => (
-// //           <div
-// //             key={p.id}
-// //             style={{
-// //               padding: "15px",
-// //               border: "1px solid #333",
-// //               marginBottom: "10px",
-// //               borderRadius: "8px"
-// //             }}
-// //           >
-// //             <div
-// //               style={{
-// //                 fontWeight: "bold",
-// //                 color: "#888"
-// //               }}
-// //             >
-// //               {p.display_name || "anonymous"}
-// //             </div>
-
-// //             <div
-// //               style={{
-// //                 display: "flex",
-// //                 gap: "8px",
-// //                 alignItems: "center",
-// //                 marginBottom: "8px"
-// //               }}
-// //             >
-// //               <div
-// //                 style={{
-// //                   fontSize: "14px",
-// //                   color: "#aaa"
-// //                 }}
-// //               >
-// //                 {new Date(p.created_at).toLocaleString(undefined, {
-// //                   day: "numeric",
-// //                   month: "short",
-// //                   hour: "numeric",
-// //                   minute: "2-digit"
-// //                 })}
-// //               </div>
-
-// //               <div
-// //                 style={{
-// //                   fontSize: "11px",
-// //                   color: "#666"
-// //                 }}
-// //               >
-// //                 • {timeAgo(p.created_at)}
-// //               </div>
-// //             </div>
-
-// //             <div>{p.content}</div>
-// //           </div>
-// //         ))}
-// //       </div>
-// //     </div>
-// //   );
-// // }
-// "use client";
-
-// import { useEffect, useState } from "react";
-// import { supabase } from "../lib/supabase";
-
-// type Post = {
-//   id: number;
-//   content: string;
-//   anonymous_id: string;
-//   display_name: string;
-//   created_at: string;
-// };
-
-// type AuthMode = "login" | "signup";
-
-// const WORDS = [
-//   "petal",
-//   "nova",
-//   "echo",
-//   "mist",
-//   "leaf",
-//   "ember",
-//   "orbit",
-//   "luna",
-//   "river",
-//   "cloud",
-//   "sakura",
-//   "storm",
-//   "drift",
-//   "haze",
-//   "frost",
-//   "flare",
-//   "dusk",
-//   "bloom",
-//   "cedar",
-//   "ash"
-// ];
-
-// const generateName = () => {
-//   const word = WORDS[Math.floor(Math.random() * WORDS.length)];
-//   const number = Math.floor(100 + Math.random() * 900);
-//   return word + number;
-// };
-
-// const timeAgo = (dateString: string) => {
-//   const seconds = Math.floor(
-//     (new Date().getTime() - new Date(dateString).getTime()) / 1000
-//   );
-//   const interval = seconds / 3600;
-//   if (interval > 24) {
-//     return new Date(dateString).toLocaleString(undefined, {
-//       day: "numeric",
-//       month: "short"
-//     });
-//   }
-//   if (interval >= 1) return Math.floor(interval) + "h ago";
-//   const mins = seconds / 60;
-//   if (mins >= 1) return Math.floor(mins) + "m ago";
-//   return "just now";
-// };
-
-// export default function Home() {
-//   const [posts, setPosts] = useState<Post[]>([]);
-//   const [text, setText] = useState("");
-//   const [authMode, setAuthMode] = useState<AuthMode>("login");
-//   const [email, setEmail] = useState("");
-//   const [password, setPassword] = useState("");
-//   const [authError, setAuthError] = useState("");
-//   const [authLoading, setAuthLoading] = useState(false);
-//   const [user, setUser] = useState<any>(null);
-//   const [displayName, setDisplayName] = useState<string>("");
-//   const [posting, setPosting] = useState(false);
-//   const [sessionLoading, setSessionLoading] = useState(true);
-//   const [successMsg, setSuccessMsg] = useState("");
-
-//   // ── Restore session on mount ──────────────────────────────────────────────
-//   useEffect(() => {
-//     const init = async () => {
-//       const {
-//         data: { session }
-//       } = await supabase.auth.getSession();
-//       if (session?.user) {
-//         await handleUserSession(session.user);
-//       }
-//       setSessionLoading(false);
-//     };
-//     init();
-
-//     const { data: listener } = supabase.auth.onAuthStateChange(
-//       async (_event, session) => {
-//         if (session?.user) {
-//           await handleUserSession(session.user);
-//         } else {
-//           setUser(null);
-//           setDisplayName("");
-//         }
-//       }
-//     );
-
-//     return () => listener.subscription.unsubscribe();
-//   }, []);
-
-//   useEffect(() => {
-//     if (user) loadPosts();
-//   }, [user]);
-
-//   // ── Assign or retrieve persistent username ────────────────────────────────
-//   const handleUserSession = async (authUser: any) => {
-//     setUser(authUser);
-
-//     // Check if user already has a display_name in user_metadata
-//     const existingName = authUser.user_metadata?.display_name;
-//     if (existingName) {
-//       setDisplayName(existingName);
-//       return;
-//     }
-
-//     // First time — generate a name and save it to user metadata
-//     const newName = generateName();
-//     const { data, error } = await supabase.auth.updateUser({
-//       data: { display_name: newName }
-//     });
-
-//     if (!error && data.user) {
-//       setDisplayName(newName);
-//     }
-//   };
-
-//   // ── Auth actions ──────────────────────────────────────────────────────────
-//   const handleAuth = async () => {
-//     setAuthError("");
-//     setSuccessMsg("");
-//     if (!email.trim() || !password.trim()) {
-//       setAuthError("Please enter email and password.");
-//       return;
-//     }
-//     setAuthLoading(true);
-
-//     if (authMode === "signup") {
-//       const { error } = await supabase.auth.signUp({ email, password });
-//       if (error) {
-//         setAuthError(error.message);
-//       } else {
-//         setSuccessMsg(
-//           "Account created! Check your email to confirm, then log in."
-//         );
-//         setAuthMode("login");
-//       }
-//     } else {
-//       const { error } = await supabase.auth.signInWithPassword({
-//         email,
-//         password
-//       });
-//       if (error) setAuthError(error.message);
-//     }
-
-//     setAuthLoading(false);
-//   };
-
-//   const handleLogout = async () => {
-//     await supabase.auth.signOut();
-//     setPosts([]);
-//   };
-
-//   // ── Posts ─────────────────────────────────────────────────────────────────
-//   const loadPosts = async () => {
-//     const { data, error } = await supabase
-//       .from("posts")
-//       .select("*")
-//       .order("created_at", { ascending: false });
-//     if (!error && data) setPosts(data);
-//   };
-
-//   const createPost = async () => {
-//     if (!text.trim() || !user || !displayName) return;
-//     setPosting(true);
-
-//     const { error } = await supabase.from("posts").insert([
-//       {
-//         content: text.trim(),
-//         anonymous_id: user.id,
-//         display_name: displayName
-//       }
-//     ]);
-
-//     if (!error) {
-//       setText("");
-//       await loadPosts();
-//     }
-//     setPosting(false);
-//   };
-
-//   // ── Render ────────────────────────────────────────────────────────────────
-//   if (sessionLoading) {
-//     return (
-//       <div style={styles.loadingWrap}>
-//         <div style={styles.spinner} />
-//       </div>
-//     );
-//   }
-
-//   // AUTH SCREEN
-//   if (!user) {
-//     return (
-//       <div style={styles.authPage}>
-//         <div style={styles.authCard}>
-//           {/* Logo */}
-//           <div style={styles.logo}>UnTale</div>
-//           <p style={styles.tagline}>Your voice, your alias.</p>
-
-//           {/* Tab switcher */}
-//           <div style={styles.tabRow}>
-//             <button
-//               style={authMode === "login" ? styles.tabActive : styles.tab}
-//               onClick={() => {
-//                 setAuthMode("login");
-//                 setAuthError("");
-//                 setSuccessMsg("");
-//               }}
-//             >
-//               Log In
-//             </button>
-//             <button
-//               style={authMode === "signup" ? styles.tabActive : styles.tab}
-//               onClick={() => {
-//                 setAuthMode("signup");
-//                 setAuthError("");
-//                 setSuccessMsg("");
-//               }}
-//             >
-//               Sign Up
-//             </button>
-//           </div>
-
-//           {/* Inputs */}
-//           <input
-//             type="email"
-//             placeholder="Email"
-//             value={email}
-//             onChange={(e) => setEmail(e.target.value)}
-//             onKeyDown={(e) => e.key === "Enter" && handleAuth()}
-//             style={styles.input}
-//           />
-//           <input
-//             type="password"
-//             placeholder="Password"
-//             value={password}
-//             onChange={(e) => setPassword(e.target.value)}
-//             onKeyDown={(e) => e.key === "Enter" && handleAuth()}
-//             style={styles.input}
-//           />
-
-//           {authError && <p style={styles.errorText}>{authError}</p>}
-//           {successMsg && <p style={styles.successText}>{successMsg}</p>}
-
-//           <button
-//             onClick={handleAuth}
-//             disabled={authLoading}
-//             style={styles.primaryBtn}
-//           >
-//             {authLoading
-//               ? "Please wait…"
-//               : authMode === "login"
-//                 ? "Log In"
-//                 : "Create Account"}
-//           </button>
-
-//           {authMode === "signup" && (
-//             <p style={styles.noteText}>
-//               🎲 You'll be assigned a random alias like <em>petal482</em> —
-//               yours forever.
-//             </p>
-//           )}
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   // MAIN APP (logged in)
-//   return (
-//     <div style={styles.page}>
-//       {/* Header */}
-//       <div style={styles.header}>
-//         <span style={styles.headerLogo}>UnTale</span>
-//         <div style={styles.headerRight}>
-//           <span style={styles.headerName}>👤 {displayName}</span>
-//           <button onClick={handleLogout} style={styles.logoutBtn}>
-//             Log Out
-//           </button>
-//         </div>
-//       </div>
-
-//       {/* Compose */}
-//       <div style={styles.composeBox}>
-//         <div style={styles.composeMeta}>
-//           Posting as <strong>{displayName}</strong>
-//         </div>
-//         <textarea
-//           value={text}
-//           onChange={(e) => setText(e.target.value)}
-//           placeholder="What's on your mind?"
-//           style={styles.textarea}
-//         />
-//         <button
-//           onClick={createPost}
-//           disabled={posting || !text.trim()}
-//           style={{
-//             ...styles.primaryBtn,
-//             opacity: posting || !text.trim() ? 0.5 : 1,
-//             marginTop: "10px"
-//           }}
-//         >
-//           {posting ? "Posting…" : "Post"}
-//         </button>
-//       </div>
-
-//       {/* Feed */}
-//       <div style={styles.feed}>
-//         {posts.length === 0 && (
-//           <p style={{ color: "#666", textAlign: "center", marginTop: "40px" }}>
-//             No posts yet. Be the first.
-//           </p>
-//         )}
-//         {posts.map((p) => (
-//           <div key={p.id} style={styles.postCard}>
-//             <div style={styles.postAuthor}>{p.display_name || "anonymous"}</div>
-//             <div style={styles.postMeta}>
-//               {new Date(p.created_at).toLocaleString(undefined, {
-//                 day: "numeric",
-//                 month: "short",
-//                 hour: "numeric",
-//                 minute: "2-digit"
-//               })}
-//               <span style={styles.dot}>•</span>
-//               {timeAgo(p.created_at)}
-//             </div>
-//             <div style={styles.postContent}>{p.content}</div>
-//           </div>
-//         ))}
-//       </div>
-//     </div>
-//   );
-// }
-
-// // ── Styles ──────────────────────────────────────────────────────────────────
-// const styles: Record<string, React.CSSProperties> = {
-//   // Loading
-//   loadingWrap: {
-//     display: "flex",
-//     alignItems: "center",
-//     justifyContent: "center",
-//     height: "100vh",
-//     background: "#0d0d0d"
-//   },
-//   spinner: {
-//     width: 32,
-//     height: 32,
-//     border: "3px solid #333",
-//     borderTop: "3px solid #e0e0e0",
-//     borderRadius: "50%",
-//     animation: "spin 0.8s linear infinite"
-//   },
-
-//   // Auth page
-//   authPage: {
-//     minHeight: "100vh",
-//     background: "#0d0d0d",
-//     display: "flex",
-//     alignItems: "center",
-//     justifyContent: "center",
-//     fontFamily: "'Georgia', serif"
-//   },
-//   authCard: {
-//     background: "#161616",
-//     border: "1px solid #2a2a2a",
-//     borderRadius: "16px",
-//     padding: "48px 40px",
-//     width: "100%",
-//     maxWidth: "420px",
-//     display: "flex",
-//     flexDirection: "column",
-//     gap: "12px"
-//   },
-//   logo: {
-//     fontSize: "32px",
-//     fontWeight: "700",
-//     color: "#f0f0f0",
-//     letterSpacing: "-1px",
-//     textAlign: "center",
-//     marginBottom: "4px"
-//   },
-//   tagline: {
-//     textAlign: "center",
-//     color: "#666",
-//     fontSize: "14px",
-//     margin: "0 0 8px"
-//   },
-//   tabRow: {
-//     display: "flex",
-//     gap: "8px",
-//     marginBottom: "4px"
-//   },
-//   tab: {
-//     flex: 1,
-//     padding: "10px",
-//     background: "transparent",
-//     border: "1px solid #2a2a2a",
-//     borderRadius: "8px",
-//     color: "#666",
-//     cursor: "pointer",
-//     fontSize: "14px"
-//   },
-//   tabActive: {
-//     flex: 1,
-//     padding: "10px",
-//     background: "#1e1e1e",
-//     border: "1px solid #444",
-//     borderRadius: "8px",
-//     color: "#f0f0f0",
-//     cursor: "pointer",
-//     fontSize: "14px",
-//     fontWeight: "600"
-//   },
-//   input: {
-//     padding: "12px 14px",
-//     background: "#111",
-//     border: "1px solid #2a2a2a",
-//     borderRadius: "8px",
-//     color: "#f0f0f0",
-//     fontSize: "15px",
-//     outline: "none",
-//     width: "100%",
-//     boxSizing: "border-box"
-//   },
-//   primaryBtn: {
-//     padding: "13px",
-//     background: "#f0f0f0",
-//     color: "#0d0d0d",
-//     border: "none",
-//     borderRadius: "8px",
-//     fontWeight: "700",
-//     fontSize: "15px",
-//     cursor: "pointer",
-//     width: "100%",
-//     transition: "opacity 0.2s"
-//   },
-//   errorText: { color: "#ff6b6b", fontSize: "13px", margin: "0" },
-//   successText: { color: "#6bffb8", fontSize: "13px", margin: "0" },
-//   noteText: {
-//     color: "#666",
-//     fontSize: "12px",
-//     textAlign: "center",
-//     margin: "4px 0 0",
-//     lineHeight: "1.5"
-//   },
-
-//   // Main app
-//   page: {
-//     maxWidth: "600px",
-//     margin: "0 auto",
-//     padding: "0 16px 60px",
-//     fontFamily: "'Georgia', serif",
-//     background: "#0d0d0d",
-//     minHeight: "100vh",
-//     color: "#e0e0e0"
-//   },
-//   header: {
-//     display: "flex",
-//     alignItems: "center",
-//     justifyContent: "space-between",
-//     padding: "24px 0 20px",
-//     borderBottom: "1px solid #1e1e1e",
-//     marginBottom: "28px"
-//   },
-//   headerLogo: {
-//     fontSize: "22px",
-//     fontWeight: "700",
-//     color: "#f0f0f0",
-//     letterSpacing: "-0.5px"
-//   },
-//   headerRight: { display: "flex", alignItems: "center", gap: "12px" },
-//   headerName: { fontSize: "13px", color: "#888" },
-//   logoutBtn: {
-//     padding: "6px 14px",
-//     background: "transparent",
-//     border: "1px solid #2a2a2a",
-//     borderRadius: "6px",
-//     color: "#888",
-//     cursor: "pointer",
-//     fontSize: "13px"
-//   },
-
-//   composeBox: {
-//     background: "#161616",
-//     border: "1px solid #2a2a2a",
-//     borderRadius: "12px",
-//     padding: "20px",
-//     marginBottom: "32px"
-//   },
-//   composeMeta: { fontSize: "12px", color: "#666", marginBottom: "10px" },
-//   textarea: {
-//     width: "100%",
-//     minHeight: "90px",
-//     padding: "12px",
-//     background: "#111",
-//     border: "1px solid #2a2a2a",
-//     borderRadius: "8px",
-//     color: "#e0e0e0",
-//     fontSize: "15px",
-//     resize: "vertical",
-//     outline: "none",
-//     boxSizing: "border-box",
-//     fontFamily: "inherit"
-//   },
-
-//   feed: { display: "flex", flexDirection: "column", gap: "12px" },
-//   postCard: {
-//     background: "#161616",
-//     border: "1px solid #222",
-//     borderRadius: "12px",
-//     padding: "18px 20px"
-//   },
-//   postAuthor: {
-//     fontWeight: "700",
-//     color: "#aaa",
-//     fontSize: "13px",
-//     marginBottom: "4px"
-//   },
-//   postMeta: {
-//     display: "flex",
-//     alignItems: "center",
-//     gap: "6px",
-//     fontSize: "12px",
-//     color: "#555",
-//     marginBottom: "10px"
-//   },
-//   dot: { color: "#444" },
-//   postContent: { fontSize: "15px", lineHeight: "1.65", color: "#ddd" }
-// };
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -760,8 +11,6 @@ type Post = {
   display_name: string;
   created_at: string;
 };
-
-type AuthMode = "login" | "signup";
 
 // Word list for random names
 const WORDS = [
@@ -817,24 +66,304 @@ const timeAgo = (dateString: string) => {
   if (mins >= 1) return Math.floor(mins) + "m ago";
   return "just now";
 };
+function FeedbackForm({
+  displayName,
+  showNotification
+}: {
+  displayName: string;
+  showNotification: (msg: string, type?: string) => void;
+}) {
+  const [rating, setRating] = useState("");
+  const [mostUsed, setMostUsed] = useState("");
+  const [wantNext, setWantNext] = useState<string[]>([]);
+  const [suggestion, setSuggestion] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const RATINGS = [
+    "😍 Love it",
+    "😊 It's good",
+    "😐 It's okay",
+    "😔 Needs work"
+  ];
+  const FEATURES_USED = [
+    "📝 Posting",
+    "❤️ Liking posts",
+    "💬 Replying",
+    "👀 Just reading"
+  ];
+  const NEXT_FEATURES = [
+    "💬 Anonymous chat",
+    "🎭 Mood tags",
+    "🔔 Notifications",
+    "🌙 Dark themes",
+    "🏆 Top stories",
+    "🔒 Save posts"
+  ];
+
+  const toggleWantNext = (f: string) => {
+    setWantNext((prev) =>
+      prev.includes(f)
+        ? prev.filter((x) => x !== f)
+        : prev.length < 3
+          ? [...prev, f]
+          : prev
+    );
+  };
+
+  const handleSubmit = async () => {
+    if (!rating) {
+      showNotification("Tell us how you feel about UnTale first 🌸");
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.from("feedback").insert([
+      {
+        feeling: rating,
+        most_used: mostUsed || null,
+        want_next: wantNext.length > 0 ? wantNext : null,
+        suggestion: suggestion.trim() || null,
+        display_name: displayName || "anonymous"
+      }
+    ]);
+    if (error) {
+      showNotification("Something went wrong. Try again.");
+    } else {
+      setSubmitted(true);
+      showNotification("Thank you 🌸 Your voice shapes UnTale.", "success");
+    }
+    setSubmitting(false);
+  };
+
+  if (submitted) {
+    return (
+      <div style={{ textAlign: "center", padding: "20px 0" }}>
+        <div style={{ fontSize: "48px", marginBottom: "16px" }}>🌸</div>
+        <p
+          style={{
+            color: "#e879a0",
+            fontSize: "18px",
+            fontWeight: 600,
+            marginBottom: "8px"
+          }}
+        >
+          Thank you.
+        </p>
+        <p style={{ color: "#7c6a9a", fontSize: "14px", lineHeight: 1.7 }}>
+          Every response helps decide what UnTale becomes next.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+      {/* Q1 */}
+      <div>
+        <p
+          style={{
+            fontSize: "14px",
+            color: "#a89bc2",
+            marginBottom: "12px",
+            fontWeight: 600
+          }}
+        >
+          1. How do you feel about UnTale so far?
+        </p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+          {RATINGS.map((r) => (
+            <button
+              key={r}
+              onClick={() => setRating(r)}
+              style={{
+                padding: "8px 16px",
+                borderRadius: "50px",
+                border: `1.5px solid ${rating === r ? "#e879a0" : "rgba(232,121,160,0.2)"}`,
+                background:
+                  rating === r ? "rgba(232,121,160,0.15)" : "transparent",
+                color: rating === r ? "#e879a0" : "#a89bc2",
+                fontSize: "13px",
+                cursor: "pointer",
+                fontFamily: "'DM Sans', sans-serif",
+                transition: "all 0.2s"
+              }}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Q2 */}
+      <div>
+        <p
+          style={{
+            fontSize: "14px",
+            color: "#a89bc2",
+            marginBottom: "12px",
+            fontWeight: 600
+          }}
+        >
+          2. What did you use the most?
+        </p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+          {FEATURES_USED.map((f) => (
+            <button
+              key={f}
+              onClick={() => setMostUsed(f)}
+              style={{
+                padding: "8px 16px",
+                borderRadius: "50px",
+                border: `1.5px solid ${mostUsed === f ? "#c084fc" : "rgba(192,132,200,0.2)"}`,
+                background:
+                  mostUsed === f ? "rgba(192,132,200,0.15)" : "transparent",
+                color: mostUsed === f ? "#c084fc" : "#a89bc2",
+                fontSize: "13px",
+                cursor: "pointer",
+                fontFamily: "'DM Sans', sans-serif",
+                transition: "all 0.2s"
+              }}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Q3 */}
+      <div>
+        <p
+          style={{
+            fontSize: "14px",
+            color: "#a89bc2",
+            marginBottom: "4px",
+            fontWeight: 600
+          }}
+        >
+          3. What should we build next?{" "}
+          <span style={{ color: "#5b4d72", fontWeight: 400 }}>
+            (pick up to 3)
+          </span>
+        </p>
+        <p style={{ fontSize: "12px", color: "#5b4d72", marginBottom: "12px" }}>
+          {wantNext.length}/3 selected
+        </p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+          {NEXT_FEATURES.map((f) => (
+            <button
+              key={f}
+              onClick={() => toggleWantNext(f)}
+              style={{
+                padding: "8px 16px",
+                borderRadius: "50px",
+                border: `1.5px solid ${wantNext.includes(f) ? "#60a5fa" : "rgba(96,165,250,0.2)"}`,
+                background: wantNext.includes(f)
+                  ? "rgba(96,165,250,0.15)"
+                  : "transparent",
+                color: wantNext.includes(f) ? "#60a5fa" : "#a89bc2",
+                fontSize: "13px",
+                cursor: "pointer",
+                fontFamily: "'DM Sans', sans-serif",
+                transition: "all 0.2s",
+                opacity: !wantNext.includes(f) && wantNext.length >= 3 ? 0.4 : 1
+              }}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Q4 */}
+      <div>
+        <p
+          style={{
+            fontSize: "14px",
+            color: "#a89bc2",
+            marginBottom: "10px",
+            fontWeight: 600
+          }}
+        >
+          4. Anything else you want to tell us?{" "}
+          <span style={{ color: "#5b4d72", fontWeight: 400 }}>(optional)</span>
+        </p>
+        <textarea
+          value={suggestion}
+          onChange={(e) => setSuggestion(e.target.value)}
+          placeholder="Your honest thoughts, ideas, complaints — all welcome…"
+          maxLength={500}
+          style={{
+            width: "100%",
+            minHeight: "90px",
+            padding: "14px",
+            background: "rgba(16,10,40,0.6)",
+            border: "1.5px solid rgba(232,121,160,0.18)",
+            borderRadius: "14px",
+            color: "#ede8f8",
+            fontSize: "14px",
+            resize: "vertical",
+            outline: "none",
+            boxSizing: "border-box",
+            fontFamily: "'DM Sans', sans-serif",
+            lineHeight: "1.65"
+          }}
+        />
+        <div
+          style={{
+            fontSize: 11,
+            color: "#5b4d72",
+            textAlign: "right",
+            marginTop: 3
+          }}
+        >
+          {suggestion.length}/500
+        </div>
+      </div>
+
+      <button
+        onClick={handleSubmit}
+        disabled={submitting || !rating}
+        style={{
+          padding: "13px",
+          background: "linear-gradient(135deg, #be185d, #e879a0)",
+          color: "#fff",
+          border: "none",
+          borderRadius: "50px",
+          fontWeight: "700",
+          fontSize: "15px",
+          cursor: submitting || !rating ? "not-allowed" : "pointer",
+          opacity: submitting || !rating ? 0.5 : 1,
+          fontFamily: "'DM Sans', sans-serif",
+          transition: "all 0.25s"
+        }}
+      >
+        {submitting ? "Sending…" : "🌸 Send Feedback"}
+      </button>
+    </div>
+  );
+}
 
 export default function Home() {
   // State
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [postsToday, setPostsToday] = useState(0);
   const [posts, setPosts] = useState<Post[]>([]);
   const [text, setText] = useState("");
-  const [authMode, setAuthMode] = useState<AuthMode>("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [authError, setAuthError] = useState("");
-  const [authLoading, setAuthLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [displayName, setDisplayName] = useState<string>("");
   const [posting, setPosting] = useState(false);
   const [sessionLoading, setSessionLoading] = useState(true);
-  const [successMsg, setSuccessMsg] = useState("");
   const [showReplyId, setShowReplyId] = useState<number | null>(null);
   const [replyText, setReplyText] = useState("");
   const [replySubmitting, setReplySubmitting] = useState(false);
+  const [replyCounts, setReplyCounts] = useState<Map<number, number>>(
+    new Map()
+  );
+  const [repliesMap, setRepliesMap] = useState<Map<number, any[]>>(new Map());
+  const [repliesLoading, setRepliesLoading] = useState<Set<number>>(new Set());
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
   const [likesCount, setLikesCount] = useState<Map<number, number>>(new Map());
   const [reportedPosts, setReportedPosts] = useState<Set<number>>(new Set());
@@ -845,7 +374,7 @@ export default function Home() {
   } | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState<
-    "home" | "feed" | "chat" | "premium"
+    "home" | "feed" | "about" | "feedback"
   >("home");
   const [chatPhase, setChatPhase] = useState<"pick" | "searching" | "chat">(
     "pick"
@@ -855,7 +384,24 @@ export default function Home() {
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
+  const filteredPosts = searchQuery.trim()
+    ? posts.filter((p) => {
+        const q = searchQuery.toLowerCase().trim();
+        const matchesContent = p.content.toLowerCase().includes(q);
+        const matchesName = p.display_name.toLowerCase().includes(q);
+        const matchesDate = new Date(p.created_at)
+          .toLocaleDateString(undefined, {
+            day: "numeric",
+            month: "short",
+            year: "numeric"
+          })
+          .toLowerCase()
+          .includes(q);
+        return matchesContent || matchesName || matchesDate;
+      })
+    : posts;
   // Mood data for chat
   const CHAT_MOODS = [
     {
@@ -985,40 +531,79 @@ export default function Home() {
   };
 
   // Load posts from Supabase
-  const loadPosts = async () => {
+  const PAGE_SIZE = 15;
+
+  const loadPosts = async (pageNum = 0, append = false, userId?: string) => {
+    if (pageNum === 0) setLoadingMore(false);
+    else setLoadingMore(true);
+
+    const from = pageNum * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
     const { data, error } = await supabase
       .from("posts")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     if (error) {
-      console.log(error);
+      console.error(error);
+      setLoadingMore(false);
       return;
     }
 
     if (data) {
-      setPosts(data);
-      // Initialize likes from localStorage
-      const savedLikes = localStorage.getItem("liked_posts");
-      if (savedLikes) {
-        setLikedPosts(new Set(JSON.parse(savedLikes)));
-      }
-      const savedReports = localStorage.getItem("reported_posts");
-      if (savedReports) {
-        setReportedPosts(new Set(JSON.parse(savedReports)));
-      }
-      // Initialize like counts
-      const likesMap = new Map();
-      data.forEach((post) => {
-        const savedLikesCount = localStorage.getItem(`likes_${post.id}`);
-        likesMap.set(
-          post.id,
-          savedLikesCount
-            ? parseInt(savedLikesCount)
-            : Math.floor(Math.random() * 50) + 10
-        );
+      setPosts((prev) => (append ? [...prev, ...data] : data));
+      setHasMore(data.length === PAGE_SIZE);
+      setPage(pageNum);
+      await loadReplyCounts();
+      await loadLikesForPosts(
+        data.map((p) => p.id),
+        userId
+      );
+    }
+    setLoadingMore(false);
+  };
+
+  const loadLikesForPosts = async (
+    postIds: number[],
+    currentUserId?: string
+  ) => {
+    if (postIds.length === 0) return;
+
+    const { data: allLikes } = await supabase
+      .from("likes")
+      .select("post_id")
+      .in("post_id", postIds);
+
+    const counts = new Map<number, number>();
+    postIds.forEach((id) => counts.set(id, 0));
+    (allLikes || []).forEach((l) =>
+      counts.set(l.post_id, (counts.get(l.post_id) || 0) + 1)
+    );
+
+    setLikesCount((prev) => {
+      const next = new Map(prev);
+      counts.forEach((v, k) => next.set(k, v));
+      return next;
+    });
+
+    // Use passed userId OR fall back to current user state
+    const userId = currentUserId || user?.id;
+    if (!userId) return;
+
+    const { data: myLikes } = await supabase
+      .from("likes")
+      .select("post_id")
+      .in("post_id", postIds)
+      .eq("user_id", userId);
+
+    if (myLikes) {
+      setLikedPosts((prev) => {
+        const next = new Set(prev);
+        myLikes.forEach((l) => next.add(l.post_id));
+        return next;
       });
-      setLikesCount(likesMap);
     }
   };
 
@@ -1028,14 +613,18 @@ export default function Home() {
       showNotification("Write something first 🌸");
       return;
     }
-
     if (!user) {
-      showNotification("Please log in first");
+      showNotification("Something went wrong. Try again.");
       return;
     }
-
+    if (postsToday >= 5) {
+      showNotification(
+        "You've shared 5 stories today 🌸 Come back tomorrow.",
+        "warn"
+      );
+      return;
+    }
     setPosting(true);
-
     const { error } = await supabase.from("posts").insert([
       {
         content: text.trim(),
@@ -1043,119 +632,119 @@ export default function Home() {
         display_name: displayName
       }
     ]);
-
     if (error) {
-      console.log("INSERT ERROR:", error);
       showNotification("Something went wrong. Try again.");
     } else {
       setText("");
-      await loadPosts();
+      setPostsToday((prev) => prev + 1);
+      await loadPosts(0, false, user.id);
       showNotification("Your story is now a star in the night 🌟", "success");
     }
-
     setPosting(false);
   };
 
   // Handle user session
-  const handleUserSession = async (authUser: any) => {
+  const handleUserSession = async (authUser: any): Promise<string> => {
     setUser(authUser);
-
     const existingName = authUser.user_metadata?.display_name;
     if (existingName) {
       setDisplayName(existingName);
-      return;
+      return existingName;
     }
-
     const newName = generateName();
     const { error } = await supabase.auth.updateUser({
       data: { display_name: newName }
     });
-
-    if (!error) {
-      setDisplayName(newName);
-    }
-  };
-
-  // Auth functions
-  const handleAuth = async () => {
-    setAuthError("");
-    setSuccessMsg("");
-
-    if (!email.trim() || !password.trim()) {
-      setAuthError("Please enter email and password.");
-      return;
-    }
-
-    setAuthLoading(true);
-
-    if (authMode === "signup") {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) {
-        setAuthError(error.message);
-      } else {
-        setSuccessMsg(
-          "Account created! Check your email to confirm, then log in."
-        );
-        setAuthMode("login");
-        setEmail("");
-        setPassword("");
-      }
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      if (error) {
-        setAuthError(error.message);
-      } else {
-        showNotification("✨ Welcome back! 🌙", "success");
-      }
-    }
-
-    setAuthLoading(false);
+    if (!error) setDisplayName(newName);
+    return newName;
   };
 
   const handleLogout = async () => {
+    // Sign out and immediately create a new anonymous session
     await supabase.auth.signOut();
-    setUser(null);
-    setPosts([]);
-    setDisplayName("");
+    const { data, error } = await supabase.auth.signInAnonymously();
+    if (!error && data.user) {
+      await handleUserSession(data.user);
+      await loadPosts(0, false, data.user.id);
+    }
     setCurrentPage("home");
-    showNotification("Signed out 🌙");
+    showNotification("New anonymous identity created 🌸");
   };
 
   // Post interactions
-  const handleLike = (postId: number) => {
-    const newLiked = new Set(likedPosts);
-    const newLikesCount = new Map(likesCount);
+  const handleLike = async (postId: number) => {
+    if (!user) return;
 
-    if (newLiked.has(postId)) {
-      newLiked.delete(postId);
-      newLikesCount.set(postId, (newLikesCount.get(postId) || 0) - 1);
+    const alreadyLiked = likedPosts.has(postId);
+
+    // Optimistic update
+    setLikedPosts((prev) => {
+      const next = new Set(prev);
+      alreadyLiked ? next.delete(postId) : next.add(postId);
+      return next;
+    });
+    setLikesCount((prev) => {
+      const next = new Map(prev);
+      next.set(
+        postId,
+        Math.max(0, (next.get(postId) || 0) + (alreadyLiked ? -1 : 1))
+      );
+      return next;
+    });
+
+    if (alreadyLiked) {
+      const { error } = await supabase
+        .from("likes")
+        .delete()
+        .eq("post_id", postId)
+        .eq("user_id", user.id);
+      if (error) {
+        // Revert
+        setLikedPosts((prev) => {
+          const next = new Set(prev);
+          next.add(postId);
+          return next;
+        });
+        setLikesCount((prev) => {
+          const next = new Map(prev);
+          next.set(postId, (next.get(postId) || 0) + 1);
+          return next;
+        });
+      }
     } else {
-      newLiked.add(postId);
-      newLikesCount.set(postId, (newLikesCount.get(postId) || 0) + 1);
+      const { error } = await supabase
+        .from("likes")
+        .upsert([{ post_id: postId, user_id: user.id }], {
+          onConflict: "post_id,user_id",
+          ignoreDuplicates: true
+        });
+      if (error) {
+        // Revert
+        setLikedPosts((prev) => {
+          const next = new Set(prev);
+          next.delete(postId);
+          return next;
+        });
+        setLikesCount((prev) => {
+          const next = new Map(prev);
+          next.set(postId, Math.max(0, (next.get(postId) || 0) - 1));
+          return next;
+        });
+      }
     }
-
-    setLikedPosts(newLiked);
-    setLikesCount(newLikesCount);
-    localStorage.setItem("liked_posts", JSON.stringify(Array.from(newLiked)));
-    localStorage.setItem(
-      `likes_${postId}`,
-      newLikesCount.get(postId)?.toString() || "0"
-    );
   };
 
-  const handleReport = (postId: number) => {
-    if (reportedPosts.has(postId)) return;
-    const newReported = new Set(reportedPosts);
-    newReported.add(postId);
-    setReportedPosts(newReported);
-    localStorage.setItem(
-      "reported_posts",
-      JSON.stringify(Array.from(newReported))
-    );
-    showNotification("Post reported anonymously.");
+  const handleReport = async (postId: number) => {
+    if (!user || reportedPosts.has(postId)) return;
+
+    const { error } = await supabase
+      .from("reports")
+      .insert([{ post_id: postId, reported_by: user.id }]);
+
+    if (!error) {
+      setReportedPosts((prev) => new Set(prev).add(postId));
+      showNotification("Post reported anonymously.");
+    }
   };
 
   const handleReply = async (postId: number) => {
@@ -1163,14 +752,119 @@ export default function Home() {
       showNotification("Write something first 🌸");
       return;
     }
-
     setReplySubmitting(true);
-    setTimeout(() => {
+
+    const { data, error } = await supabase
+      .from("replies")
+      .insert([
+        {
+          post_id: postId,
+          content: replyText.trim(),
+          display_name: displayName
+        }
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      showNotification("Something went wrong. Try again.");
+    } else {
       setReplyText("");
-      setShowReplyId(null);
-      setReplySubmitting(false);
       showNotification("Reply posted 🌸", "success");
-    }, 900);
+      // Update reply count
+      setReplyCounts((prev) => {
+        const next = new Map(prev);
+        next.set(postId, (next.get(postId) || 0) + 1);
+        return next;
+      });
+      // Append to open replies if visible
+      if (data) {
+        setRepliesMap((prev) => {
+          const next = new Map(prev);
+          next.set(postId, [...(prev.get(postId) || []), data]);
+          return next;
+        });
+      }
+    }
+    setReplySubmitting(false);
+  };
+  const handleDeletePost = async (postId: number, anonymousId: string) => {
+    if (user?.id !== anonymousId) {
+      showNotification("You can only delete your own posts.");
+      return;
+    }
+    const { error } = await supabase.from("posts").delete().eq("id", postId);
+    if (!error) {
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+      showNotification("Post deleted 🌸");
+    } else {
+      showNotification("Something went wrong. Try again.");
+    }
+  };
+
+  const handleDeleteReply = async (replyId: number, postId: number) => {
+    const { error } = await supabase.from("replies").delete().eq("id", replyId);
+    if (!error) {
+      setRepliesMap((prev) => {
+        const next = new Map(prev);
+        next.set(
+          postId,
+          (prev.get(postId) || []).filter((r) => r.id !== replyId)
+        );
+        return next;
+      });
+      setReplyCounts((prev) => {
+        const next = new Map(prev);
+        next.set(postId, Math.max(0, (prev.get(postId) || 0) - 1));
+        return next;
+      });
+      showNotification("Reply deleted 🌸");
+    } else {
+      showNotification("Something went wrong. Try again.");
+    }
+  };
+  const loadReplies = async (postId: number) => {
+    setRepliesLoading((prev) => new Set(prev).add(postId));
+    const { data, error } = await supabase
+      .from("replies")
+      .select("*")
+      .eq("post_id", postId)
+      .order("created_at", { ascending: true });
+
+    if (!error && data) {
+      setRepliesMap((prev) => {
+        const next = new Map(prev);
+        next.set(postId, data);
+        return next;
+      });
+    }
+    setRepliesLoading((prev) => {
+      const next = new Set(prev);
+      next.delete(postId);
+      return next;
+    });
+  };
+
+  const loadReplyCounts = async () => {
+    const { data } = await supabase.from("replies").select("post_id");
+    if (data) {
+      const counts = new Map<number, number>();
+      data.forEach((r) =>
+        counts.set(r.post_id, (counts.get(r.post_id) || 0) + 1)
+      );
+      setReplyCounts(counts);
+    }
+  };
+
+  const loadPostsToday = async (userId: string) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const { count } = await supabase
+      .from("posts")
+      .select("*", { count: "exact", head: true })
+      .eq("anonymous_id", userId)
+      .gte("created_at", today.toISOString());
+    setPostsToday(count || 0);
   };
 
   // Chat functions
@@ -1372,15 +1066,172 @@ export default function Home() {
     };
   }, []);
 
+  // Falling leaves effect
+  useEffect(() => {
+    const canvas = document.createElement("canvas");
+    canvas.id = "leaf-canvas";
+    canvas.style.cssText =
+      "position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9990;";
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext("2d")!;
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const handleResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    window.addEventListener("resize", handleResize);
+
+    const mouse = { x: -999, y: -999 };
+    const handleMouseMove = (e: MouseEvent) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      mouse.x = touch.clientX;
+      mouse.y = touch.clientY;
+    };
+    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+
+    const SAKURA_COLORS = [
+      ["#fce4f0", "#e879a0"],
+      ["#f9d0e8", "#d4548a"],
+      ["#ffe0ef", "#f5a0c0"],
+      ["#f0d6f5", "#c084c8"],
+      ["#fce8f8", "#e07ac0"]
+    ];
+
+    const drawSakuraPetal = (
+      x: number,
+      y: number,
+      size: number,
+      angle: number,
+      colors: string[]
+    ) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
+      grad.addColorStop(0, colors[0]);
+      grad.addColorStop(1, colors[1] + "99");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      for (let i = 0; i < 5; i++) {
+        const a = (i * Math.PI * 2) / 5 - Math.PI / 2;
+        const bx = Math.cos(a) * size * 0.4;
+        const by = Math.sin(a) * size * 0.4;
+        const cx1 = Math.cos(a - 0.4) * size;
+        const cy1 = Math.sin(a - 0.4) * size;
+        const cx2 = Math.cos(a + 0.4) * size;
+        const cy2 = Math.sin(a + 0.4) * size;
+        if (i === 0) ctx.moveTo(bx, by);
+        ctx.bezierCurveTo(cx1, cy1, cx2, cy2, bx, by);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    };
+
+    const createLeaf = () => {
+      const colors =
+        SAKURA_COLORS[Math.floor(Math.random() * SAKURA_COLORS.length)];
+      return {
+        x: Math.random() * canvas.width,
+        y: -20,
+        size: 3 + Math.random() * 4,
+        speedY: 0.4 + Math.random() * 0.6,
+        speedX: (Math.random() - 0.5) * 0.4,
+        angle: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.025,
+        sway: Math.random() * Math.PI * 2,
+        swaySpeed: 0.008 + Math.random() * 0.012,
+        swayAmp: 0.4 + Math.random() * 0.8,
+        opacity: 0.55 + Math.random() * 0.4,
+        colors,
+        vx: 0,
+        vy: 0
+      };
+    };
+
+    const leaves = Array.from({ length: 28 }, () => {
+      const l = createLeaf();
+      l.y = Math.random() * canvas.height;
+      return l;
+    });
+
+    let animId: number;
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const leaf of leaves) {
+        leaf.sway += leaf.swaySpeed;
+        const swayX = Math.sin(leaf.sway) * leaf.swayAmp;
+        const dx = leaf.x - mouse.x;
+        const dy = leaf.y - mouse.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 90 && dist > 0) {
+          const force = (90 - dist) / 90;
+          leaf.vx += (dx / dist) * force * 2.2;
+          leaf.vy += (dy / dist) * force * 2.2;
+        }
+        leaf.vx *= 0.88;
+        leaf.vy *= 0.88;
+        leaf.x += swayX + leaf.speedX + leaf.vx;
+        leaf.y += leaf.speedY + leaf.vy;
+        leaf.angle += leaf.rotSpeed;
+        ctx.globalAlpha = leaf.opacity;
+        drawSakuraPetal(leaf.x, leaf.y, leaf.size, leaf.angle, leaf.colors);
+        ctx.globalAlpha = 1;
+        if (
+          leaf.y > canvas.height + 30 ||
+          leaf.x < -50 ||
+          leaf.x > canvas.width + 50
+        ) {
+          const fresh = createLeaf();
+          Object.assign(leaf, fresh);
+        }
+      }
+      animId = requestAnimationFrame(animate);
+    };
+    animate();
+
+    return () => {
+      cancelAnimationFrame(animId);
+      canvas.remove();
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("touchmove", handleTouchMove); // ← add this
+    };
+  }, []);
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (openMenuId !== null) setOpenMenuId(null);
+    };
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, [openMenuId]);
   // Restore session on mount
   useEffect(() => {
     const init = async () => {
       const {
         data: { session }
       } = await supabase.auth.getSession();
+
       if (session?.user) {
         await handleUserSession(session.user);
-        await loadPosts();
+        await loadPosts(0, false, session.user.id);
+        await loadPostsToday(session.user.id);
+      } else {
+        const { data, error } = await supabase.auth.signInAnonymously();
+        if (!error && data.user) {
+          await handleUserSession(data.user);
+          await loadPosts(0, false, data.user.id);
+          await loadPostsToday(data.user.id);
+        }
       }
       setSessionLoading(false);
     };
@@ -1390,7 +1241,6 @@ export default function Home() {
       async (_event, session) => {
         if (session?.user) {
           await handleUserSession(session.user);
-          await loadPosts();
         } else {
           setUser(null);
           setDisplayName("");
@@ -1398,309 +1248,1291 @@ export default function Home() {
       }
     );
 
-    return () => listener.subscription.unsubscribe();
+    // Realtime: new posts appear instantly
+    // Realtime: new posts appear instantly
+    const channel = supabase
+      .channel("posts-feed")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "posts" },
+        (payload) => {
+          setPosts((prev) => [payload.new as Post, ...prev]);
+          setLikesCount((prev) => {
+            const next = new Map(prev);
+            next.set((payload.new as Post).id, 0);
+            return next;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      listener.subscription.unsubscribe();
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   if (sessionLoading) {
     return (
       <div style={styles.loadingWrap}>
         <div style={styles.spinner} />
-      </div>
-    );
-  }
-
-  // Auth Screen
-  if (!user) {
-    return (
-      <div style={styles.authPage}>
-        <div style={styles.authCard}>
-          <div style={styles.logo}>UnTale</div>
-          <p style={styles.tagline}>Tell what remains untold.</p>
-
-          <div style={styles.tabRow}>
-            <button
-              style={authMode === "login" ? styles.tabActive : styles.tab}
-              onClick={() => {
-                setAuthMode("login");
-                setAuthError("");
-                setSuccessMsg("");
-              }}
-            >
-              Log In
-            </button>
-            <button
-              style={authMode === "signup" ? styles.tabActive : styles.tab}
-              onClick={() => {
-                setAuthMode("signup");
-                setAuthError("");
-                setSuccessMsg("");
-              }}
-            >
-              Sign Up
-            </button>
-          </div>
-
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleAuth()}
-            style={styles.input}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleAuth()}
-            style={styles.input}
-          />
-
-          {authError && <p style={styles.errorText}>{authError}</p>}
-          {successMsg && <p style={styles.successText}>{successMsg}</p>}
-
-          <button
-            onClick={handleAuth}
-            disabled={authLoading}
-            style={styles.primaryBtn}
-          >
-            {authLoading
-              ? "Please wait…"
-              : authMode === "login"
-                ? "Log In"
-                : "Create Account"}
-          </button>
-
-          {authMode === "signup" && (
-            <p style={styles.noteText}>
-              🎲 You'll be assigned a random alias like <em>petal482</em> —
-              yours forever.
-            </p>
-          )}
-        </div>
+        <p style={{ color: "#a89bc2", marginTop: 20, fontSize: 14 }}>
+          Finding your space…
+        </p>
       </div>
     );
   }
 
   // HOME PAGE COMPONENT
-  const renderHome = () => (
-    <div>
-      <div style={styles.hero}>
-        <div style={styles.heroLogo}>🌸</div>
-        <h1 style={styles.heroTitle}>
-          Tell what remains
-          <br />
-          <em style={{ color: "#e879a0", fontStyle: "italic" }}>untold.</em>
+  // const renderHome = () => (
+  //   <div>
+  //     <div style={styles.hero}>
+  //       <div style={styles.heroLogo}>🌸</div>
+  //       <h1 style={styles.heroTitle}>
+  //         Tell what remains
+  //         <br />
+  //         <em style={{ color: "#e879a0", fontStyle: "italic" }}>untold.</em>
+  //       </h1>
+  //       <p style={styles.heroSubtitle}>
+  //         An anonymous space to share your truest thoughts, find comfort in
+  //         strangers, and be wholly, unguardedly yourself.
+  //       </p>
+  //       <div style={styles.heroButtons}>
+  //         <button
+  //           style={styles.btnPrimary}
+  //           onClick={() => setCurrentPage("feed")}
+  //         >
+  //           ✍️ Start Posting
+  //         </button>
+  //         <button
+  //           style={styles.btnGhost}
+  //           onClick={() => setCurrentPage("chat")}
+  //         >
+  //           💬 Talk to Someone
+  //         </button>
+  //       </div>
+  //     </div>
+  //     <div style={styles.featuresGrid}>
+  //       {[
+  //         {
+  //           icon: "🎭",
+  //           title: "Truly Anonymous",
+  //           desc: "No names, no photos, no traces. Just your words, floating free."
+  //         },
+  //         {
+  //           icon: "💬",
+  //           title: "Mood-Matched Chat",
+  //           desc: "Connect with a stranger who feels exactly the way you do right now."
+  //         },
+  //         {
+  //           icon: "🌸",
+  //           title: "Safe Space",
+  //           desc: "Community guidelines exist. Kindness is the default here."
+  //         },
+  //         {
+  //           icon: "🔒",
+  //           title: "Your Privacy First",
+  //           desc: "We don't store identifiable data. Your secrets stay yours."
+  //         }
+  //       ].map((f) => (
+  //         <div key={f.title} style={styles.featureCard}>
+  //           <div style={styles.featureIcon}>{f.icon}</div>
+  //           <h3 style={styles.featureTitle}>{f.title}</h3>
+  //           <p style={styles.featureDesc}>{f.desc}</p>
+  //         </div>
+  //       ))}
+  //     </div>
+  //   </div>
+  // );
+  const renderAbout = () => (
+    <div style={{ maxWidth: "640px", margin: "0 auto", padding: "40px 0" }}>
+      <div
+        style={{
+          maxWidth: "760px",
+          margin: "0 auto",
+          padding: "80px 20px",
+          position: "relative",
+          fontFamily: "'Inter', sans-serif"
+        }}
+      >
+        {/* floating doodles */}
+        <div
+          style={{
+            position: "absolute",
+            top: "40px",
+            left: "-20px",
+            fontSize: "22px",
+            opacity: 0.2
+          }}
+        >
+          ✿
+        </div>
+
+        <div
+          style={{
+            position: "absolute",
+            top: "220px",
+            right: "-10px",
+            fontSize: "18px",
+            opacity: 0.15
+          }}
+        >
+          ~
+        </div>
+
+        <div
+          style={{
+            position: "absolute",
+            bottom: "120px",
+            left: "-25px",
+            fontSize: "20px",
+            opacity: 0.2
+          }}
+        >
+          ❀
+        </div>
+
+        {/* Title */}
+        <h1
+          style={{
+            fontSize: "42px",
+            textAlign: "center",
+            marginBottom: "60px",
+            fontFamily: "'Playfair Display', serif",
+            color: "#f1eaff",
+            position: "relative"
+          }}
+        >
+          About{" "}
+          <em style={{ color: "#e879a0", fontStyle: "normal" }}>UnTale</em>
+          <div
+            style={{
+              width: "120px",
+              height: "2px",
+              background:
+                "linear-gradient(to right, transparent, #e879a0, transparent)",
+              margin: "14px auto 0"
+            }}
+          />
         </h1>
-        <p style={styles.heroSubtitle}>
-          An anonymous space to share your truest thoughts, find comfort in
-          strangers, and be wholly, unguardedly yourself.
+
+        {/* Paragraph 1 */}
+        <p
+          style={{
+            fontSize: "18px",
+            color: "#b8a9d6",
+            lineHeight: "2.1",
+            marginBottom: "28px"
+          }}
+        >
+          There was a time when I could not even think properly. I could not
+          understand myself, and worse, I did not know how to share what I was
+          feeling or who I could even share it with.
+          <span
+            style={{
+              display: "block",
+              marginTop: "14px",
+              fontStyle: "italic",
+              color: "#d8cfff",
+              fontFamily: "'Playfair Display', serif"
+            }}
+          >
+            I felt lost for days without moving. Stuck.
+          </span>
+          Like my feet were rooted to a place I did not choose.
         </p>
+
+        {/* emotional divider */}
+        <div
+          style={{
+            textAlign: "center",
+            margin: "40px 0",
+            color: "#e879a0",
+            fontSize: "20px",
+            letterSpacing: "6px",
+            opacity: 0.6
+          }}
+        >
+          · · ·
+        </div>
+
+        {/* Paragraph 2 */}
+        <p
+          style={{
+            fontSize: "18px",
+            color: "#b8a9d6",
+            lineHeight: "2.1",
+            marginBottom: "32px"
+          }}
+        >
+          Have you ever felt like there was something continuously running in
+          your head and every time you tried to share it, even with your best
+          friend, the words just never came out?
+        </p>
+
+        <p
+          style={{
+            fontSize: "18px",
+            color: "#d8cfff",
+            lineHeight: "2.1",
+            marginBottom: "36px",
+            fontStyle: "italic",
+            fontFamily: "'Playfair Display', serif"
+          }}
+        >
+          Like they existed somewhere inside you but refused to form into
+          something anyone could hold?
+        </p>
+
+        {/* single line impact */}
+        <p
+          style={{
+            fontSize: "20px",
+            color: "#ffffff",
+            textAlign: "center",
+            margin: "50px 0",
+            fontFamily: "'Playfair Display', serif"
+          }}
+        >
+          Have you ever felt that no matter how much you tried, nothing and no
+          one could fix it?
+        </p>
+
+        {/* broken rhythm text */}
+        <div style={{ marginBottom: "40px" }}>
+          <p
+            style={{
+              fontSize: "18px",
+              color: "#b8a9d6",
+              lineHeight: "2"
+            }}
+          >
+            Hundreds of questions swirling.
+          </p>
+          <p style={{ color: "#b8a9d6", margin: "6px 0" }}>No proper words.</p>
+          <p style={{ color: "#b8a9d6", margin: "6px 0" }}>No proper place.</p>
+          <p
+            style={{
+              marginTop: "14px",
+              color: "#e879a0",
+              fontWeight: "500"
+            }}
+          >
+            That is when I thought of UnTale.
+          </p>
+        </div>
+
+        {/* Paragraph */}
+        <p
+          style={{
+            fontSize: "18px",
+            color: "#b8a9d6",
+            lineHeight: "2.1",
+            marginBottom: "50px"
+          }}
+        >
+          There are so many of us. Hurt, pressured, betrayed, carrying weight we
+          never asked to carry, blamed for things that were never our fault. We
+          are like little petals that have fallen from the tree, pushed wherever
+          the wind takes us, with no say in the direction.
+        </p>
+
+        {/* MAIN QUOTE (hero moment) */}
+        <div
+          style={{
+            margin: "70px 0",
+            textAlign: "center",
+            position: "relative"
+          }}
+        >
+          <div
+            style={{
+              fontSize: "60px",
+              position: "absolute",
+              top: "-30px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              opacity: 0.08
+            }}
+          >
+            “
+          </div>
+
+          <p
+            style={{
+              color: "#f5c6d6",
+              lineHeight: "2.2",
+              fontStyle: "italic",
+              fontFamily: "'Playfair Display', serif",
+              fontSize: "24px",
+              maxWidth: "600px",
+              margin: "0 auto"
+            }}
+          >
+            But here, together, we will form our own tree. We will grow. We will
+            heal. And slowly, we will learn to hold the wind in our own hands.
+          </p>
+        </div>
+
+        {/* closing paragraph */}
+        <p
+          style={{
+            fontSize: "18px",
+            color: "#b8a9d6",
+            lineHeight: "2.1",
+            marginBottom: "60px",
+            textAlign: "center"
+          }}
+        >
+          Find another petal like you. Someone who might need you to help them
+          become their own wind. And maybe, without even trying, they will do
+          the same for you.
+        </p>
+
+        {/* feature card reimagined */}
+        <div
+          style={{
+            textAlign: "center",
+            padding: "30px 20px",
+            borderTop: "1px dashed rgba(255,255,255,0.1)",
+            borderBottom: "1px dashed rgba(255,255,255,0.1)"
+          }}
+        >
+          <div
+            style={{
+              fontSize: "36px",
+              marginBottom: "12px"
+            }}
+          >
+            🌸
+          </div>
+
+          <p
+            style={{
+              color: "#ffffff",
+              fontSize: "17px",
+              lineHeight: "1.8",
+              marginBottom: "10px",
+              fontWeight: "600"
+            }}
+          >
+            UnTale is an anonymous space where your words finally have a home.
+          </p>
+
+          <p
+            style={{
+              color: "#a393c8",
+              fontSize: "14px",
+              lineHeight: "1.9",
+              margin: 0
+            }}
+          >
+            No names. No faces. No judgment. Just you, your thoughts, and a
+            community of people who understand what it means to carry something
+            unsaid. Write here. Read here. Breathe here. You are not alone in
+            this, and you never were.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+  const renderHome = () => (
+    <div style={styles.homePage}>
+      {/* Ambient orbs */}
+      <div style={styles.orb1} />
+      <div style={styles.orb2} />
+      <div style={styles.orb3} />
+
+      {/* Hero */}
+      <div style={styles.hero}>
+        <div style={styles.heroEyebrow}>
+          <span style={styles.eyebrowDot} />
+          <span style={styles.eyebrowText}>safe · anonymous · free</span>
+          <span style={styles.eyebrowDot} />
+        </div>
+
+        <h1 style={styles.heroTitle}>
+          <span style={{ ...styles.titleLine, animationDelay: "0.1s" }}>
+            Tell what remains
+          </span>
+          <br />
+          <em style={{ ...styles.titleAccent, animationDelay: "0.35s" }}>
+            untold.
+          </em>
+        </h1>
+
+        <p style={styles.heroSubtitle}>
+          A place where your heaviest thoughts finally have somewhere to land.
+          <br />
+          No names. No judgment. Just honesty.
+        </p>
+
         <div style={styles.heroButtons}>
           <button
             style={styles.btnPrimary}
             onClick={() => setCurrentPage("feed")}
           >
-            ✍️ Start Posting
+            ✍️ Start Writing
           </button>
           <button
             style={styles.btnGhost}
-            onClick={() => setCurrentPage("chat")}
+            onClick={() => setCurrentPage("about")}
           >
-            💬 Talk to Someone
+            What is UnTale?
           </button>
         </div>
-        <div style={styles.heroStats}>
-          <div style={styles.stat}>
-            <div style={styles.statNum}>24K+</div>
-            <div style={styles.statLabel}>Anonymous voices</div>
-          </div>
-          <div style={styles.stat}>
-            <div style={styles.statNum}>138K</div>
-            <div style={styles.statLabel}>Stories shared</div>
-          </div>
-          <div style={styles.stat}>
-            <div style={styles.statNum}>∞</div>
-            <div style={styles.statLabel}>Judgment-free</div>
-          </div>
+
+        {/* Floating words */}
+        <div style={styles.floatingWords}>
+          {[
+            "lost",
+            "hopeful",
+            "tired",
+            "healing",
+            "scared",
+            "okay",
+            "trying",
+            "seen"
+          ].map((w, i) => (
+            <span
+              key={w}
+              style={{
+                ...styles.floatingWord,
+                animationDelay: `${i * 0.4}s`,
+                left: `${8 + i * 11.5}%`,
+                animationDuration: `${6 + (i % 3)}s`
+              }}
+            >
+              {w}
+            </span>
+          ))}
         </div>
       </div>
-      <div style={styles.featuresGrid}>
+
+      {/* Quote strip */}
+      <div style={styles.quoteStrip}>
+        <div style={styles.quoteInner}>
+          <span style={styles.quoteGlyph}>"</span>
+          <p style={styles.quoteText}>
+            We are like little petals that have fallen from the tree — pushed
+            wherever the wind takes us.{" "}
+            <em style={{ color: "#e879a0" }}>But here, together, we grow.</em>
+          </p>
+        </div>
+      </div>
+
+      {/* Feature tiles */}
+      <div style={styles.tilesGrid}>
         {[
           {
             icon: "🎭",
             title: "Truly Anonymous",
-            desc: "No names, no photos, no traces. Just your words, floating free."
+            desc: "A random alias. No names, no photos, no traces. Just your words, floating free.",
+            accent: "#e879a0"
           },
           {
-            icon: "💬",
-            title: "Mood-Matched Chat",
-            desc: "Connect with a stranger who feels exactly the way you do right now."
+            icon: "📖",
+            title: "Read Others' Stories",
+            desc: "Thousands of unheard voices waiting to be found. You are not alone in this.",
+            accent: "#c084fc"
           },
           {
             icon: "🌸",
-            title: "Safe Space",
-            desc: "Community guidelines exist. Kindness is the default here."
-          },
-          {
-            icon: "🔒",
-            title: "End-to-End Privacy",
-            desc: "We don't store identifiable data. Your secrets stay yours."
+            title: "A Safe Space",
+            desc: "Kindness is the default here. Community guidelines protect every voice.",
+            accent: "#60a5fa"
           }
         ].map((f, i) => (
-          <div key={f.title} style={styles.featureCard}>
-            <div style={styles.featureIcon}>{f.icon}</div>
-            <h3 style={styles.featureTitle}>{f.title}</h3>
-            <p style={styles.featureDesc}>{f.desc}</p>
+          <div
+            key={f.title}
+            style={{
+              ...styles.tile,
+              animationDelay: `${0.2 + i * 0.15}s`,
+              borderTopColor: f.accent
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLDivElement).style.transform =
+                "translateY(-6px)";
+              (e.currentTarget as HTMLDivElement).style.boxShadow =
+                `0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px ${f.accent}33`;
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLDivElement).style.transform =
+                "translateY(0)";
+              (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+            }}
+          >
+            <div style={styles.tileIcon}>{f.icon}</div>
+            <h3 style={{ ...styles.tileTitle, color: f.accent }}>{f.title}</h3>
+            <p style={styles.tileDesc}>{f.desc}</p>
           </div>
         ))}
+      </div>
+
+      {/* Bottom CTA */}
+      <div style={styles.bottomCta}>
+        <p style={styles.ctaText}>Your story deserves to be heard.</p>
+        <button style={styles.ctaBtn} onClick={() => setCurrentPage("feed")}>
+          🌸 Release Your Story
+        </button>
       </div>
     </div>
   );
-
   // Feed View
   const renderFeed = () => (
-    <>
-      <div style={styles.composeBox}>
-        <div style={styles.composeMeta}>
-          Posting as <strong>{displayName}</strong>
-        </div>
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="What's on your mind? Speak freely…"
-          style={styles.textarea}
-          maxLength={600}
-        />
-        <div
-          style={{
-            fontSize: 12,
-            color: "#5b4d72",
-            textAlign: "right",
-            marginTop: 4
-          }}
-        >
-          {text.length}/600
-        </div>
-        <button
-          onClick={createPost}
-          disabled={posting || !text.trim()}
-          style={{
-            ...styles.primaryBtn,
-            opacity: posting || !text.trim() ? 0.5 : 1,
-            marginTop: "10px"
-          }}
-        >
-          {posting ? "Posting…" : "🌸 Release Your Story"}
-        </button>
-      </div>
-
-      <div style={styles.feed}>
-        {posts.length === 0 && (
-          <p
-            style={{ color: "#7c6a9a", textAlign: "center", marginTop: "40px" }}
+    <div style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
+      {/* Main feed column */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={styles.composeBox}>
+          <div style={styles.composeMeta}>
+            Posting as{" "}
+            <strong style={{ color: "#e879a0" }}>{displayName || "…"}</strong>
+          </div>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="What's on your mind? Speak freely…"
+            style={styles.textarea}
+            maxLength={600}
+          />
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginTop: 4
+            }}
           >
-            No posts yet. Be the first.
-          </p>
-        )}
-        {posts.map((p) => (
-          <div key={p.id} style={styles.postCard}>
-            <div style={styles.postHeader}>
-              <div style={styles.anonAvatar}>🌸</div>
-              <div style={styles.postAuthor}>{p.display_name}</div>
-              <div style={styles.postTime}>
-                {new Date(p.created_at).toLocaleString(undefined, {
-                  day: "numeric",
-                  month: "short",
-                  hour: "numeric",
-                  minute: "2-digit"
-                })}
-                <span style={{ margin: "0 6px" }}>•</span>
-                {timeAgo(p.created_at)}
-              </div>
-            </div>
-            <div style={styles.postContent}>{p.content}</div>
-            <div style={styles.postTags}>
-              <span
-                style={{
-                  background: "rgba(190,24,93,0.10)",
-                  padding: "4px 12px",
-                  borderRadius: "50px",
-                  fontSize: "12px",
-                  color: "#c084c8"
-                }}
-              >
-                #anonymous
-              </span>
-            </div>
-            <div style={styles.postActions}>
-              <button
-                style={{
-                  ...styles.actionBtn,
-                  color: likedPosts.has(p.id) ? "#e879a0" : "#a89bc2"
-                }}
-                onClick={() => handleLike(p.id)}
-              >
-                ❤️ {likesCount.get(p.id) || 0}
-              </button>
-              <button
-                style={styles.actionBtn}
-                onClick={() =>
-                  setShowReplyId(showReplyId === p.id ? null : p.id)
-                }
-              >
-                💬 {Math.floor(Math.random() * 30) + 5}
-              </button>
-              <button
-                style={{
-                  ...styles.actionBtn,
-                  color: reportedPosts.has(p.id) ? "#e879a0" : "#a89bc2"
-                }}
-                onClick={() => handleReport(p.id)}
-                disabled={reportedPosts.has(p.id)}
-              >
-                ⚠️ {reportedPosts.has(p.id) ? "Reported" : "Report"}
-              </button>
-            </div>
-            {showReplyId === p.id && (
-              <div style={styles.replyBox}>
-                <textarea
-                  style={styles.replyInput}
-                  placeholder="Write an anonymous reply… be kind 🌸"
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                />
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 8,
-                    justifyContent: "flex-end",
-                    marginTop: 8
-                  }}
-                >
-                  <button
-                    style={styles.cancelBtn}
-                    onClick={() => setShowReplyId(null)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    style={styles.replyBtn}
-                    onClick={() => handleReply(p.id)}
-                    disabled={replySubmitting}
-                  >
-                    {replySubmitting ? "..." : "🌸 Reply"}
-                  </button>
+            <span
+              style={{
+                fontSize: 12,
+                color: postsToday >= 5 ? "#e879a0" : "#5b4d72"
+              }}
+            >
+              {5 - postsToday} {5 - postsToday === 1 ? "story" : "stories"}{" "}
+              remaining today
+            </span>
+            <span style={{ fontSize: 12, color: "#5b4d72" }}>
+              {text.length}/600
+            </span>
+          </div>
+          <button
+            onClick={createPost}
+            disabled={posting || !text.trim()}
+            style={{
+              ...styles.primaryBtn,
+              opacity: posting || !text.trim() ? 0.5 : 1,
+              marginTop: "10px"
+            }}
+          >
+            {posting ? "Posting…" : "🌸 Release Your Story"}
+          </button>
+        </div>
+
+        <div style={styles.feed}>
+          {posts.length === 0 && (
+            <p
+              style={{
+                color: "#7c6a9a",
+                textAlign: "center",
+                marginTop: "40px"
+              }}
+            >
+              No posts yet. Be the first.
+            </p>
+          )}
+
+          {filteredPosts.map((p) => (
+            <div key={p.id} style={styles.postCard}>
+              <div style={styles.postHeader}>
+                <div style={styles.anonAvatar}>🌸</div>
+                <div style={styles.postAuthor}>{p.display_name}</div>
+                <div style={styles.postTime}>
+                  {new Date(p.created_at).toLocaleString(undefined, {
+                    day: "numeric",
+                    month: "short",
+                    hour: "numeric",
+                    minute: "2-digit"
+                  })}
+                  <span style={{ margin: "0 6px" }}>•</span>
+                  {timeAgo(p.created_at)}
                 </div>
               </div>
+              <div style={styles.postContent}>{p.content}</div>
+              <div style={styles.postTags}>
+                <span
+                  style={{
+                    background: "rgba(190,24,93,0.10)",
+                    padding: "4px 12px",
+                    borderRadius: "50px",
+                    fontSize: "12px",
+                    color: "#c084c8"
+                  }}
+                >
+                  #anonymous
+                </span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  position: "relative"
+                }}
+              >
+                <button
+                  style={{
+                    ...styles.actionBtn,
+                    color: likedPosts.has(p.id) ? "#e879a0" : "#a89bc2"
+                  }}
+                  onClick={() => handleLike(p.id)}
+                >
+                  {likedPosts.has(p.id) ? "❤️" : "🤍"}{" "}
+                  {likesCount.get(p.id) ?? 0}
+                </button>
+                <button
+                  style={{
+                    ...styles.actionBtn,
+                    color: showReplyId === p.id ? "#e879a0" : "#a89bc2"
+                  }}
+                  onClick={() => {
+                    if (showReplyId === p.id) {
+                      setShowReplyId(null);
+                    } else {
+                      setShowReplyId(p.id);
+                      if (!repliesMap.has(p.id)) loadReplies(p.id);
+                    }
+                  }}
+                >
+                  💬 {replyCounts.get(p.id) ?? 0}
+                </button>
+
+                {/* Floating Action Tray */}
+                <div style={{ position: "relative", marginLeft: "auto" }}>
+                  <button
+                    onClick={() =>
+                      setOpenMenuId(openMenuId === p.id ? null : p.id)
+                    }
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      background:
+                        openMenuId === p.id
+                          ? "rgba(232,121,160,0.2)"
+                          : "rgba(232,121,160,0.1)",
+                      border: "0.5px solid rgba(232,121,160,0.25)",
+                      borderRadius: "999px",
+                      color: "#e879a0",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      padding: "6px 14px",
+                      cursor: "pointer",
+                      fontFamily: "'DM Sans', sans-serif",
+                      transition: "background 0.15s, transform 0.15s",
+                      transform:
+                        openMenuId === p.id ? "scale(0.97)" : "scale(1)"
+                    }}
+                  >
+                    ⚡ Actions
+                    <span
+                      style={{
+                        display: "inline-block",
+                        fontSize: "10px",
+                        transition: "transform 0.2s",
+                        transform:
+                          openMenuId === p.id
+                            ? "rotate(180deg)"
+                            : "rotate(0deg)"
+                      }}
+                    >
+                      ▲
+                    </span>
+                  </button>
+
+                  {/* Tray */}
+                  {openMenuId === p.id && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        right: 0,
+                        bottom: "calc(100% + 10px)",
+                        background: "#1e1a32",
+                        border: "0.5px solid rgba(255,255,255,0.1)",
+                        borderRadius: "14px",
+                        padding: "6px",
+                        width: "178px",
+                        zIndex: 50,
+                        animation: "trayOpen 0.18s cubic-bezier(.4,0,.2,1) both"
+                      }}
+                    >
+                      {/* Caret */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          bottom: "-5px",
+                          right: "22px",
+                          width: "9px",
+                          height: "9px",
+                          background: "#1e1a32",
+                          borderRight: "0.5px solid rgba(255,255,255,0.1)",
+                          borderBottom: "0.5px solid rgba(255,255,255,0.1)",
+                          transform: "rotate(45deg)"
+                        }}
+                      />
+
+                      <div
+                        style={{
+                          fontSize: "10px",
+                          fontWeight: 600,
+                          letterSpacing: "0.07em",
+                          color: "rgba(255,255,255,0.25)",
+                          padding: "6px 12px 4px",
+                          textTransform: "uppercase",
+                          fontFamily: "'DM Sans', sans-serif"
+                        }}
+                      >
+                        Post options
+                      </div>
+
+                      <div
+                        style={{
+                          height: "0.5px",
+                          background: "rgba(255,255,255,0.07)",
+                          margin: "4px 6px"
+                        }}
+                      />
+
+                      {/* Report */}
+                      <button
+                        onClick={() => {
+                          handleReport(p.id);
+                          setOpenMenuId(null);
+                        }}
+                        disabled={reportedPosts.has(p.id)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                          padding: "10px 12px",
+                          borderRadius: "9px",
+                          fontSize: "13px",
+                          fontWeight: 500,
+                          cursor: reportedPosts.has(p.id)
+                            ? "default"
+                            : "pointer",
+                          border: "none",
+                          background: "transparent",
+                          width: "100%",
+                          textAlign: "left",
+                          color: reportedPosts.has(p.id)
+                            ? "rgba(255,200,80,0.35)"
+                            : "rgba(255,200,80,0.9)",
+                          fontFamily: "'DM Sans', sans-serif",
+                          transition: "background 0.12s",
+                          opacity: reportedPosts.has(p.id) ? 0.5 : 1
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!reportedPosts.has(p.id))
+                            (
+                              e.currentTarget as HTMLButtonElement
+                            ).style.background = "rgba(255,200,80,0.1)";
+                        }}
+                        onMouseLeave={(e) => {
+                          (
+                            e.currentTarget as HTMLButtonElement
+                          ).style.background = "transparent";
+                        }}
+                      >
+                        🚩{" "}
+                        {reportedPosts.has(p.id)
+                          ? "Already reported"
+                          : "Report post"}
+                      </button>
+
+                      {/* Delete — only for own posts */}
+                      {p.anonymous_id === user?.id && (
+                        <button
+                          onClick={() => {
+                            handleDeletePost(p.id, p.anonymous_id);
+                            setOpenMenuId(null);
+                          }}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "10px",
+                            padding: "10px 12px",
+                            borderRadius: "9px",
+                            fontSize: "13px",
+                            fontWeight: 500,
+                            cursor: "pointer",
+                            border: "none",
+                            background: "transparent",
+                            width: "100%",
+                            textAlign: "left",
+                            color: "rgba(240,90,90,0.9)",
+                            fontFamily: "'DM Sans', sans-serif",
+                            transition: "background 0.12s"
+                          }}
+                          onMouseEnter={(e) => {
+                            (
+                              e.currentTarget as HTMLButtonElement
+                            ).style.background = "rgba(240,90,90,0.1)";
+                          }}
+                          onMouseLeave={(e) => {
+                            (
+                              e.currentTarget as HTMLButtonElement
+                            ).style.background = "transparent";
+                          }}
+                        >
+                          🗑️ Delete post
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              {showReplyId === p.id && (
+                <div style={styles.replyBox}>
+                  {repliesLoading.has(p.id) ? (
+                    <div
+                      style={{
+                        textAlign: "center",
+                        padding: "12px 0",
+                        color: "#5b4d72",
+                        fontSize: 13
+                      }}
+                    >
+                      Loading replies…
+                    </div>
+                  ) : (repliesMap.get(p.id) || []).length > 0 ? (
+                    <div
+                      style={{
+                        marginBottom: 14,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 10
+                      }}
+                    >
+                      {(repliesMap.get(p.id) || []).map((r: any) => (
+                        <div
+                          key={r.id}
+                          style={{
+                            background: "rgba(232,121,160,0.06)",
+                            borderRadius: 12,
+                            padding: "10px 14px"
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                              marginBottom: 4
+                            }}
+                          >
+                            <span style={{ fontSize: 14 }}>🌸</span>
+                            <span
+                              style={{
+                                fontSize: 12,
+                                fontWeight: 600,
+                                color: "#a89bc2"
+                              }}
+                            >
+                              {r.display_name}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: 11,
+                                color: "#5b4d72",
+                                marginLeft: "auto"
+                              }}
+                            >
+                              {timeAgo(r.created_at)}
+                            </span>
+                            {r.display_name === displayName && (
+                              <button
+                                onClick={() => handleDeleteReply(r.id, p.id)}
+                                style={{
+                                  background: "transparent",
+                                  border: "none",
+                                  color: "#5b4d72",
+                                  fontSize: 11,
+                                  cursor: "pointer",
+                                  fontFamily: "'DM Sans', sans-serif",
+                                  padding: "2px 6px"
+                                }}
+                              >
+                                🗑️
+                              </button>
+                            )}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 14,
+                              color: "#d8cff0",
+                              lineHeight: 1.6
+                            }}
+                          >
+                            {r.content}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        fontSize: 13,
+                        color: "#5b4d72",
+                        marginBottom: 12,
+                        textAlign: "center"
+                      }}
+                    >
+                      No replies yet. Be the first 🌸
+                    </div>
+                  )}
+                  <textarea
+                    style={styles.replyInput}
+                    placeholder="Write a kind reply… 🌸"
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    maxLength={300}
+                  />
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: "#5b4d72",
+                      textAlign: "right",
+                      marginTop: 3
+                    }}
+                  >
+                    {replyText.length}/300
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      justifyContent: "flex-end",
+                      marginTop: 8
+                    }}
+                  >
+                    <button
+                      style={styles.cancelBtn}
+                      onClick={() => {
+                        setShowReplyId(null);
+                        setReplyText("");
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      style={{
+                        ...styles.replyBtn,
+                        opacity: replySubmitting || !replyText.trim() ? 0.5 : 1
+                      }}
+                      onClick={() => handleReply(p.id)}
+                      disabled={replySubmitting || !replyText.trim()}
+                    >
+                      {replySubmitting ? "…" : "🌸 Reply"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {hasMore && (
+            <button
+              onClick={() => loadPosts(page + 1, true, user?.id)}
+              disabled={loadingMore}
+              style={{
+                ...styles.primaryBtn,
+                opacity: loadingMore ? 0.5 : 1,
+                marginTop: 8
+              }}
+            >
+              {loadingMore ? "Loading…" : "Load more stories"}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Sidebar */}
+      <div style={styles.sidebar}>
+        {/* Smart Search Card */}
+        <div style={styles.sideCard}>
+          <div style={styles.sideCardTitle}>🔍 Search Posts</div>
+          <div style={{ marginTop: "12px", position: "relative" }}>
+            <input
+              type="text"
+              placeholder="keyword, name, date…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px 14px 10px 36px",
+                background: "rgba(16,10,40,0.6)",
+                border: "1.5px solid rgba(232,121,160,0.18)",
+                borderRadius: "50px",
+                color: "#ede8f8",
+                fontSize: "13px",
+                outline: "none",
+                boxSizing: "border-box",
+                fontFamily: "'DM Sans', sans-serif"
+              }}
+            />
+            <span
+              style={{
+                position: "absolute",
+                left: "12px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                fontSize: "14px",
+                pointerEvents: "none"
+              }}
+            >
+              🔍
+            </span>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                style={{
+                  position: "absolute",
+                  right: "12px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "transparent",
+                  border: "none",
+                  color: "#7c6a9a",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  padding: 0,
+                  lineHeight: 1
+                }}
+              >
+                ✕
+              </button>
             )}
           </div>
-        ))}
-      </div>
-    </>
-  );
+          {searchQuery && (
+            <div
+              style={{ marginTop: "8px", fontSize: "11px", color: "#5b4d72" }}
+            >
+              {filteredPosts.length} result
+              {filteredPosts.length !== 1 ? "s" : ""} found
+            </div>
+          )}
+        </div>
+        {/* Your identity card */}
+        <div style={styles.sideCard}>
+          <div style={styles.sideCardTitle}>Your Identity</div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginTop: 10
+            }}
+          >
+            <div
+              style={{
+                ...styles.anonAvatar,
+                width: 42,
+                height: 42,
+                fontSize: 18
+              }}
+            >
+              🌸
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, color: "#e879a0", fontSize: 14 }}>
+                {displayName || "…"}
+              </div>
+              <div style={{ fontSize: 11, color: "#5b4d72", marginTop: 2 }}>
+                Anonymous · same device
+              </div>
+            </div>
+          </div>
+        </div>
 
+        {/* Top posts this week */}
+        <div style={styles.sideCard}>
+          <div style={styles.sideCardTitle}>🔥 Most Loved</div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+              marginTop: 12
+            }}
+          >
+            {[...posts]
+              .sort(
+                (a, b) =>
+                  (likesCount.get(b.id) ?? 0) - (likesCount.get(a.id) ?? 0)
+              )
+              .slice(0, 5)
+              .map((p, i) => (
+                <div key={p.id} style={styles.sidePost}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      marginBottom: 4
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: "#e879a0",
+                        fontWeight: 700
+                      }}
+                    >
+                      #{i + 1}
+                    </span>
+                    <span style={{ fontSize: 11, color: "#5b4d72" }}>
+                      {p.display_name}
+                    </span>
+                    <span
+                      style={{
+                        marginLeft: "auto",
+                        fontSize: 11,
+                        color: "#e879a0"
+                      }}
+                    >
+                      ❤️ {likesCount.get(p.id) ?? 0}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "#a89bc2",
+                      lineHeight: 1.5,
+                      overflow: "hidden",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical" as any
+                    }}
+                  >
+                    {p.content}
+                  </div>
+                </div>
+              ))}
+            {filteredPosts.length === 0 && (
+              <p
+                style={{
+                  color: "#7c6a9a",
+                  textAlign: "center",
+                  marginTop: "40px"
+                }}
+              >
+                {searchQuery ? (
+                  <>
+                    No posts matching "<strong>{searchQuery}</strong>" 🌸
+                  </>
+                ) : (
+                  "No posts yet. Be the first."
+                )}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Community vibe */}
+        <div style={styles.sideCard}>
+          <div style={styles.sideCardTitle}>🌸 Community</div>
+          <div
+            style={{
+              marginTop: 10,
+              display: "flex",
+              flexDirection: "column",
+              gap: 8
+            }}
+          >
+            <div style={styles.statRow}>
+              <span style={{ fontSize: 12, color: "#7c6a9a" }}>
+                Stories shared
+              </span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#e879a0" }}>
+                {posts.length}+
+              </span>
+            </div>
+            <div style={styles.statRow}>
+              <span style={{ fontSize: 12, color: "#7c6a9a" }}>
+                Total hearts
+              </span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#e879a0" }}>
+                {Array.from(likesCount.values()).reduce((a, b) => a + b, 0)}
+              </span>
+            </div>
+            <div style={styles.statRow}>
+              <span style={{ fontSize: 12, color: "#7c6a9a" }}>
+                Replies given
+              </span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#e879a0" }}>
+                {Array.from(replyCounts.values()).reduce((a, b) => a + b, 0)}
+              </span>
+            </div>
+          </div>
+          <div
+            style={{
+              marginTop: 14,
+              padding: "10px 12px",
+              background: "rgba(232,121,160,0.06)",
+              borderRadius: 10,
+              fontSize: 12,
+              color: "#7c6a9a",
+              lineHeight: 1.6,
+              fontStyle: "italic"
+            }}
+          >
+            "You are not alone in this. Every story here is proof." 🌙
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+  const renderFeedback = () => (
+    <div style={{ maxWidth: "580px", margin: "0 auto", padding: "40px 24px" }}>
+      <h1
+        style={{
+          fontFamily: "'Playfair Display', serif",
+          fontSize: "36px",
+          color: "#f1eaff",
+          textAlign: "center",
+          marginBottom: "10px"
+        }}
+      >
+        Your <em style={{ color: "#e879a0" }}>Voice</em> Matters
+      </h1>
+      <p
+        style={{
+          textAlign: "center",
+          color: "#7c6a9a",
+          fontSize: "14px",
+          marginBottom: "36px",
+          lineHeight: 1.7
+        }}
+      >
+        You're among the first to use UnTale. Help us shape what it becomes. 🌸
+      </p>
+      <div
+        style={{
+          background: "rgba(16,10,40,0.68)",
+          backdropFilter: "blur(16px)",
+          border: "1px solid rgba(232,121,160,0.18)",
+          borderRadius: "20px",
+          padding: "32px"
+        }}
+      >
+        <FeedbackForm
+          displayName={displayName}
+          showNotification={showNotification}
+        />
+      </div>
+    </div>
+  );
   // Chat View
   const renderChat = () => {
     if (chatPhase === "pick") {
@@ -1960,27 +2792,30 @@ export default function Home() {
           <button
             style={{
               ...styles.navLink,
-              ...(currentPage === "chat" ? styles.navLinkActive : {})
+              ...(currentPage === "about" ? styles.navLinkActive : {})
             }}
-            onClick={() => setCurrentPage("chat")}
+            onClick={() => setCurrentPage("about")}
           >
-            Chat
+            About
           </button>
           <button
             style={{
               ...styles.navLink,
-              ...styles.navPremium,
-              ...(currentPage === "premium" ? styles.navLinkActive : {})
+              ...(currentPage === "feedback" ? styles.navLinkActive : {})
             }}
-            onClick={() => setCurrentPage("premium")}
+            onClick={() => setCurrentPage("feedback")}
           >
-            💎 Premium
+            Feedback
           </button>
           <div style={styles.userSection}>
             <div style={styles.userAvatar}>🌸</div>
             <span style={styles.userName}>{displayName}</span>
-            <button onClick={handleLogout} style={styles.logoutButton}>
-              Sign out
+            <button
+              onClick={handleLogout}
+              style={styles.logoutButton}
+              title="Start fresh with a new anonymous identity"
+            >
+              New identity
             </button>
           </div>
         </div>
@@ -2018,34 +2853,38 @@ export default function Home() {
           <button
             style={styles.mobileLink}
             onClick={() => {
-              setCurrentPage("chat");
+              setCurrentPage("about");
               setMobileMenuOpen(false);
             }}
           >
-            Chat
+            About
           </button>
           <button
             style={styles.mobileLink}
             onClick={() => {
-              setCurrentPage("premium");
+              setCurrentPage("feedback");
               setMobileMenuOpen(false);
             }}
           >
-            Premium
+            Feedback
           </button>
           <button style={styles.mobileLink} onClick={handleLogout}>
-            Sign out
+            New identity 🌸
           </button>
         </div>
       )}
 
       {/* Page Content */}
-      <div style={styles.pageContent}>
-        {currentPage === "home" && renderHome()}
-        {currentPage === "feed" && renderFeed()}
-        {currentPage === "chat" && renderChat()}
-        {currentPage === "premium" && renderPremium()}
-      </div>
+      {currentPage === "home" && renderHome()}
+      {currentPage === "feed" && (
+        <div
+          style={{ maxWidth: "1100px", margin: "0 auto", padding: "32px 24px" }}
+        >
+          {renderFeed()}
+        </div>
+      )}
+      {currentPage === "about" && renderAbout()}
+      {currentPage === "feedback" && renderFeedback()}
 
       {/* Notification */}
       {notification && (
@@ -2416,6 +3255,186 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "14px",
     color: "#7c6a9a",
     lineHeight: "1.65"
+  },
+
+  // Home page enhanced
+  homePage: {
+    position: "relative" as const,
+    overflow: "hidden"
+  },
+  orb1: {
+    position: "absolute" as const,
+    top: "-120px",
+    left: "-80px",
+    width: "500px",
+    height: "500px",
+    borderRadius: "50%",
+    background:
+      "radial-gradient(circle, rgba(190,24,93,0.12) 0%, transparent 70%)",
+    pointerEvents: "none" as const,
+    animation: "orbPulse 8s ease-in-out infinite"
+  },
+  orb2: {
+    position: "absolute" as const,
+    top: "200px",
+    right: "-100px",
+    width: "400px",
+    height: "400px",
+    borderRadius: "50%",
+    background:
+      "radial-gradient(circle, rgba(192,132,200,0.10) 0%, transparent 70%)",
+    pointerEvents: "none" as const,
+    animation: "orbPulse 10s ease-in-out infinite reverse"
+  },
+  orb3: {
+    position: "absolute" as const,
+    bottom: "100px",
+    left: "30%",
+    width: "300px",
+    height: "300px",
+    borderRadius: "50%",
+    background:
+      "radial-gradient(circle, rgba(96,165,250,0.07) 0%, transparent 70%)",
+    pointerEvents: "none" as const,
+    animation: "orbPulse 12s ease-in-out infinite"
+  },
+  heroEyebrow: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "10px",
+    marginBottom: "28px",
+    animation: "fadeSlideUp 0.7s ease both"
+  },
+  eyebrowDot: {
+    display: "inline-block",
+    width: "4px",
+    height: "4px",
+    borderRadius: "50%",
+    background: "#e879a0",
+    opacity: 0.6
+  },
+  eyebrowText: {
+    fontSize: "12px",
+    letterSpacing: "3px",
+    textTransform: "uppercase" as const,
+    color: "#7c6a9a",
+    fontWeight: "500"
+  },
+  titleLine: {
+    display: "inline-block",
+    animation: "fadeSlideUp 0.8s ease both"
+  },
+  titleAccent: {
+    display: "inline-block",
+    color: "#e879a0",
+    fontStyle: "italic",
+    animation: "fadeSlideUp 0.8s ease both"
+  },
+  floatingWords: {
+    position: "relative" as const,
+    height: "40px",
+    marginTop: "48px",
+    overflow: "hidden"
+  },
+  floatingWord: {
+    position: "absolute" as const,
+    fontSize: "12px",
+    color: "rgba(168,155,194,0.35)",
+    letterSpacing: "1px",
+    animation: "wordFloat linear infinite",
+    whiteSpace: "nowrap" as const,
+    bottom: 0
+  },
+  quoteStrip: {
+    margin: "0 auto 60px",
+    maxWidth: "700px",
+    padding: "0 24px"
+  },
+  quoteInner: {
+    borderLeft: "2px solid rgba(232,121,160,0.35)",
+    paddingLeft: "28px",
+    position: "relative" as const,
+    animation: "fadeSlideUp 0.9s ease 0.3s both"
+  },
+  quoteGlyph: {
+    position: "absolute" as const,
+    top: "-18px",
+    left: "18px",
+    fontSize: "60px",
+    color: "rgba(232,121,160,0.08)",
+    fontFamily: "'Playfair Display', serif",
+    lineHeight: "1"
+  },
+  quoteText: {
+    fontFamily: "'Playfair Display', serif",
+    fontSize: "clamp(16px, 2.5vw, 20px)",
+    color: "#a89bc2",
+    lineHeight: "1.9",
+    margin: 0,
+    fontWeight: "400"
+  },
+  tilesGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+    gap: "20px",
+    padding: "0 24px",
+    maxWidth: "940px",
+    margin: "0 auto 80px"
+  },
+  tile: {
+    background: "rgba(16,10,40,0.55)",
+    backdropFilter: "blur(20px)",
+    border: "1px solid rgba(232,121,160,0.12)",
+    borderTop: "2px solid",
+    borderRadius: "18px",
+    padding: "32px 26px",
+    transition: "transform 0.3s ease, box-shadow 0.3s ease",
+    animation: "fadeSlideUp 0.8s ease both",
+    cursor: "default"
+  },
+  tileIcon: {
+    fontSize: "36px",
+    marginBottom: "16px",
+    display: "block"
+  },
+  tileTitle: {
+    fontSize: "16px",
+    fontWeight: "700",
+    marginBottom: "10px",
+    letterSpacing: "-0.2px"
+  },
+  tileDesc: {
+    fontSize: "14px",
+    color: "#7c6a9a",
+    lineHeight: "1.75",
+    margin: 0
+  },
+  bottomCta: {
+    textAlign: "center" as const,
+    padding: "20px 24px 80px",
+    animation: "fadeSlideUp 0.8s ease 0.5s both"
+  },
+  ctaText: {
+    fontFamily: "'Playfair Display', serif",
+    fontSize: "clamp(20px, 3vw, 28px)",
+    color: "#d8cff0",
+    marginBottom: "24px",
+    fontWeight: "400",
+    fontStyle: "italic"
+  },
+  ctaBtn: {
+    background: "linear-gradient(135deg, #be185d, #e879a0)",
+    color: "#fff",
+    border: "none",
+    borderRadius: "50px",
+    padding: "14px 36px",
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: "16px",
+    fontWeight: "700",
+    cursor: "pointer",
+    boxShadow: "0 6px 28px rgba(190,24,93,0.4)",
+    transition: "transform 0.2s, box-shadow 0.2s"
   },
 
   // Compose box
@@ -2856,6 +3875,47 @@ const styles: Record<string, React.CSSProperties> = {
   },
   notificationSuccess: {
     background: "linear-gradient(135deg, #9d174d, #be185d)"
+  },
+  sidebar: {
+    width: "280px",
+    flexShrink: 0,
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "16px",
+    position: "sticky" as const,
+    top: "84px",
+    maxHeight: "calc(100vh - 104px)",
+    overflowY: "auto" as const,
+    alignSelf: "flex-start",
+    scrollbarWidth: "none" as const
+  },
+  sideCard: {
+    background: "rgba(16,10,40,0.68)",
+    backdropFilter: "blur(16px)",
+    border: "1px solid rgba(232,121,160,0.18)",
+    borderRadius: "18px",
+    padding: "18px"
+  },
+  sideCardTitle: {
+    fontSize: "13px",
+    fontWeight: "700",
+    color: "#a89bc2",
+    letterSpacing: "0.5px",
+    textTransform: "uppercase" as const
+  },
+  sidePost: {
+    padding: "10px 12px",
+    background: "rgba(232,121,160,0.04)",
+    borderRadius: "10px",
+    border: "1px solid rgba(232,121,160,0.10)",
+    cursor: "pointer"
+  },
+  statRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "6px 0",
+    borderBottom: "1px solid rgba(232,121,160,0.08)"
   }
 };
 
@@ -2875,11 +3935,15 @@ if (typeof document !== "undefined") {
     .fade-in-d1 { animation-delay: 0.1s; }
     .fade-in-d2 { animation-delay: 0.2s; }
     .fade-in-d3 { animation-delay: 0.3s; }
-    
+    @keyframes trayOpen {
+  from { opacity: 0; transform: translateY(8px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
     @keyframes trailFade {
       0% { opacity: 0.75; transform: scale(1) rotate(0deg); }
       100% { opacity: 0; transform: scale(0.1) rotate(120deg) translateY(18px); }
     }
+    .sidebar::-webkit-scrollbar { display: none; }
     .cursor-trail-petal {
       position: fixed;
       pointer-events: none;

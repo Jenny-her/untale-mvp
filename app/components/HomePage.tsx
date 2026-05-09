@@ -2,7 +2,17 @@
 
 import UntaleLogoMark from "./UntaleLogoMark";
 
-export default function HomePage({ navigate, user }) {
+// Define the props type
+interface HomePageProps {
+  navigate: (route: string) => void;
+  user: {
+    premium?: boolean;
+    email?: string;
+    name?: string;
+  } | null;
+}
+
+export default function HomePage({ navigate, user }: HomePageProps) {
   return (
     <div>
       <div className="hero">

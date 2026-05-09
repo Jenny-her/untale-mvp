@@ -1,6 +1,10 @@
 "use client";
 
-export default function UntaleLogoMark({ size = 36 }) {
+interface UntaleLogoMarkProps {
+  size?: number;
+}
+
+export default function UntaleLogoMark({ size = 36 }: UntaleLogoMarkProps) {
   return (
     <svg
       width={size}

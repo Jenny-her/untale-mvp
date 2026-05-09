@@ -3,17 +3,40 @@
 import { useState } from "react";
 import UntaleLogoMark from "./UntaleLogoMark";
 
-export default function Navbar({ route, navigate, user, onLogout }) {
-  const [open, setOpen] = useState(false);
+// Define the props type
+interface NavbarProps {
+  route: string;
+  navigate: (route: string) => void;
+  user: {
+    premium?: boolean;
+    email?: string;
+    name?: string;
+  } | null;
+  onLogout: () => void;
+}
 
-  const links = [
+// Define the link type
+interface Link {
+  label: string;
+  r: string;
+}
+
+export default function Navbar({
+  route,
+  navigate,
+  user,
+  onLogout
+}: NavbarProps) {
+  const [open, setOpen] = useState<boolean>(false);
+
+  const links: Link[] = [
     { label: "Home", r: "/" },
     { label: "Feed", r: "/feed" },
     { label: "Chat", r: "/chat" },
     { label: "💎 Premium", r: "/premium" }
   ];
 
-  const go = (r) => {
+  const go = (r: string) => {
     navigate(r);
     setOpen(false);
   };
@@ -29,7 +52,7 @@ export default function Navbar({ route, navigate, user, onLogout }) {
         </div>
 
         <ul className="nav-links">
-          {links.map((l) => (
+          {links.map((l: Link) => (
             <li key={l.r}>
               <span
                 className={`nav-link ${l.r === "/premium" ? "nav-premium" : ""} ${route === l.r ? "active" : ""}`}
@@ -58,7 +81,10 @@ export default function Navbar({ route, navigate, user, onLogout }) {
           ) : null}
         </ul>
 
-        <button className="hamburger" onClick={() => setOpen((o) => !o)}>
+        <button
+          className="hamburger"
+          onClick={() => setOpen((o: boolean) => !o)}
+        >
           <span />
           <span />
           <span />
@@ -66,7 +92,7 @@ export default function Navbar({ route, navigate, user, onLogout }) {
       </nav>
 
       <div className={`mobile-menu ${open ? "open" : ""}`}>
-        {links.map((l) => (
+        {links.map((l: Link) => (
           <span
             key={l.r}
             className={`mobile-link ${route === l.r ? "active" : ""}`}
