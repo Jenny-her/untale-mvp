@@ -385,7 +385,29 @@ export default function Home() {
   const [chatInput, setChatInput] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [notifs, setNotifs] = useState<any[]>([]);
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+  const unreadCount = notifs.filter((n) => !n.read).length;
 
+  const loadNotifications = async (userId: string) => {
+    const { data } = await supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (data) setNotifs(data);
+  };
+
+  const markAllRead = async () => {
+    if (!user) return;
+    await supabase
+      .from("notifications")
+      .update({ read: true })
+      .eq("user_id", user.id)
+      .eq("read", false);
+    setNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
   const filteredPosts = searchQuery.trim()
     ? posts.filter((p) => {
         const q = searchQuery.toLowerCase().trim();
@@ -730,6 +752,18 @@ export default function Home() {
           next.set(postId, Math.max(0, (next.get(postId) || 0) - 1));
           return next;
         });
+      } else {
+        const post = posts.find((p) => p.id === postId);
+        if (post && post.anonymous_id !== user.id) {
+          await supabase.from("notifications").insert([
+            {
+              user_id: post.anonymous_id,
+              type: "like",
+              post_id: postId,
+              triggered_by: displayName
+            }
+          ]);
+        }
       }
     }
   };
@@ -771,6 +805,17 @@ export default function Home() {
     } else {
       setReplyText("");
       showNotification("Reply posted 🌸", "success");
+      const post = posts.find((p) => p.id === postId);
+      if (post && post.anonymous_id !== user.id) {
+        await supabase.from("notifications").insert([
+          {
+            user_id: post.anonymous_id,
+            type: "reply",
+            post_id: postId,
+            triggered_by: displayName
+          }
+        ]);
+      }
       // Update reply count
       setReplyCounts((prev) => {
         const next = new Map(prev);
@@ -1225,12 +1270,16 @@ export default function Home() {
         await handleUserSession(session.user);
         await loadPosts(0, false, session.user.id);
         await loadPostsToday(session.user.id);
+        // if session exists:
+        await loadNotifications(session.user.id);
       } else {
         const { data, error } = await supabase.auth.signInAnonymously();
         if (!error && data.user) {
           await handleUserSession(data.user);
           await loadPosts(0, false, data.user.id);
           await loadPostsToday(data.user.id);
+          // if signing in anonymously:
+          await loadNotifications(data.user.id);
         }
       }
       setSessionLoading(false);
@@ -1305,6 +1354,15 @@ export default function Home() {
             }
             return next;
           });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications" },
+        (payload) => {
+          if ((payload.new as any).user_id === user?.id) {
+            setNotifs((prev) => [payload.new, ...prev]);
+          }
         }
       )
       .subscribe();
@@ -2847,6 +2905,126 @@ export default function Home() {
           </button>
           <div style={styles.userSection}>
             <div style={styles.userAvatar}>🌸</div>
+            {/* Bell */}
+            <div style={{ position: "relative" }}>
+              <button
+                onClick={() => {
+                  setShowNotifDropdown(!showNotifDropdown);
+                  if (!showNotifDropdown) markAllRead();
+                }}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "20px",
+                  position: "relative",
+                  padding: "4px"
+                }}
+              >
+                🔔
+                {unreadCount > 0 && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      right: 0,
+                      background: "#e879a0",
+                      color: "#fff",
+                      fontSize: "10px",
+                      fontWeight: 700,
+                      borderRadius: "50%",
+                      width: "16px",
+                      height: "16px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center"
+                    }}
+                  >
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </button>
+              {showNotifDropdown && (
+                <div
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    top: "calc(100% + 10px)",
+                    width: "300px",
+                    background: "#1e1a32",
+                    border: "1px solid rgba(232,121,160,0.18)",
+                    borderRadius: "16px",
+                    padding: "12px",
+                    zIndex: 200,
+                    boxShadow: "0 8px 30px rgba(0,0,0,0.4)"
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      color: "#a89bc2",
+                      marginBottom: "10px",
+                      padding: "0 4px"
+                    }}
+                  >
+                    Notifications
+                  </div>
+                  {notifs.length === 0 ? (
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        color: "#5b4d72",
+                        textAlign: "center",
+                        padding: "20px 0"
+                      }}
+                    >
+                      No notifications yet 🌸
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "6px",
+                        maxHeight: "320px",
+                        overflowY: "auto"
+                      }}
+                    >
+                      {notifs.map((n) => (
+                        <div
+                          key={n.id}
+                          style={{
+                            padding: "10px 12px",
+                            borderRadius: "10px",
+                            background: n.read
+                              ? "transparent"
+                              : "rgba(232,121,160,0.08)",
+                            border: "1px solid rgba(232,121,160,0.08)",
+                            fontSize: "13px",
+                            color: "#d8cff0",
+                            lineHeight: 1.5
+                          }}
+                        >
+                          {n.type === "like"
+                            ? `❤️ ${n.triggered_by} liked your post`
+                            : `💬 ${n.triggered_by} replied to your post`}
+                          <div
+                            style={{
+                              fontSize: "11px",
+                              color: "#5b4d72",
+                              marginTop: "3px"
+                            }}
+                          >
+                            {timeAgo(n.created_at)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
             <span style={styles.userName}>{displayName}</span>
             <button
               onClick={handleLogout}
