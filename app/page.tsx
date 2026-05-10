@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabase";
 
 // Types
@@ -80,6 +80,7 @@ function FeedbackForm({
   displayName: string;
   showNotification: (msg: string, type?: string) => void;
 }) {
+  const [brokenDetail, setBrokenDetail] = useState("");
   const [feeling, setFeeling] = useState("");
   const [safeFeeling, setSafeFeeling] = useState("");
   const [wantNext, setWantNext] = useState<string[]>([]);
@@ -106,17 +107,17 @@ function FeedbackForm({
   const NEXT_FEATURES = [
     { emoji: "💬", label: "Anonymous chat with real people" },
     { emoji: "🎭", label: "Mood tags on posts" },
-    { emoji: "🔔", label: "Notify me when someone replies" },
-    { emoji: "🌙", label: "Different themes / dark modes" },
-    { emoji: "📌", label: "Save posts I like" },
-    { emoji: "🗓️", label: "Daily prompt to write" }
+    { emoji: "📌", label: "Save posts that moved me" },
+    { emoji: "🗓️", label: "Daily emotional check-in prompt" },
+    { emoji: "🤝", label: "Peer support circles by topic" },
+    { emoji: "📖", label: "Private journal only I can see" }
   ];
 
   const BROKEN_OPTIONS = [
     "Nothing, all good",
-    "Login / signup was confusing",
     "Feed didn't load properly",
     "Replies didn't work",
+    "Post took too long to submit",
     "Something else"
   ];
 
@@ -143,7 +144,10 @@ function FeedbackForm({
         feeling: feeling,
         safe_feeling: safeFeeling || null,
         want_next: wantNext.length > 0 ? wantNext : null,
-        broken: broken || null,
+        broken:
+          broken === "Something else" && brokenDetail.trim()
+            ? `Something else: ${brokenDetail.trim()}`
+            : broken || null,
         suggestion: freeText.trim() || null,
         display_name: "anonymous"
       }
@@ -320,6 +324,30 @@ function FeedbackForm({
             </button>
           ))}
         </div>
+        {broken === "Something else" && (
+          <textarea
+            value={brokenDetail}
+            onChange={(e) => setBrokenDetail(e.target.value)}
+            placeholder="Tell us what felt off…"
+            maxLength={300}
+            style={{
+              marginTop: "12px",
+              width: "100%",
+              minHeight: "72px",
+              padding: "12px 14px",
+              background: "rgba(16,10,40,0.6)",
+              border: "1.5px solid rgba(248,113,113,0.25)",
+              borderRadius: "14px",
+              color: "#ede8f8",
+              fontSize: "14px",
+              resize: "vertical",
+              outline: "none",
+              boxSizing: "border-box",
+              fontFamily: "'DM Sans', sans-serif",
+              lineHeight: "1.65"
+            }}
+          />
+        )}
       </div>
 
       {/* Q5 — free text */}
@@ -377,7 +405,9 @@ function FeedbackForm({
           cursor: submitting || !feeling ? "not-allowed" : "pointer",
           opacity: submitting || !feeling ? 0.5 : 1,
           fontFamily: "'DM Sans', sans-serif",
-          transition: "all 0.25s"
+          transition: "all 0.25s",
+          marginTop: "8px",
+          boxShadow: "0 4px 20px rgba(190,24,93,0.4)"
         }}
       >
         {submitting ? "Sending…" : "🌸 Send Feedback"}
@@ -418,14 +448,7 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState<
     "home" | "feed" | "about" | "feedback"
   >("home");
-  const [chatPhase, setChatPhase] = useState<"pick" | "searching" | "chat">(
-    "pick"
-  );
-  const [myMood, setMyMood] = useState<string | null>(null);
-  const [matchedMood, setMatchedMood] = useState<any>(null);
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
-  const [chatInput, setChatInput] = useState("");
-  const chatEndRef = useRef<HTMLDivElement>(null);
+
   const userRef = useRef<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [notifs, setNotifs] = useState<any[]>([]);
@@ -467,127 +490,6 @@ export default function Home() {
         return matchesContent || matchesName || matchesDate;
       })
     : posts;
-  // Mood data for chat
-  const CHAT_MOODS = [
-    {
-      emoji: "😊",
-      label: "Happy",
-      desc: "Riding good vibes",
-      color: "#f5c842"
-    },
-    {
-      emoji: "😔",
-      label: "Sad",
-      desc: "Need someone to hear",
-      color: "#60a5fa"
-    },
-    {
-      emoji: "😰",
-      label: "Anxious",
-      desc: "Head won't quiet down",
-      color: "#e879a0"
-    },
-    {
-      emoji: "😤",
-      label: "Angry",
-      desc: "Frustrated and venting",
-      color: "#f87171"
-    },
-    {
-      emoji: "🥺",
-      label: "Lonely",
-      desc: "Just want company",
-      color: "#fcd34d"
-    },
-    {
-      emoji: "😶",
-      label: "Numb",
-      desc: "Feeling nothing much",
-      color: "#a89bc2"
-    },
-    {
-      emoji: "😓",
-      label: "Stressed",
-      desc: "Too much at once",
-      color: "#34d399"
-    },
-    {
-      emoji: "🥰",
-      label: "Grateful",
-      desc: "Wanting to share joy",
-      color: "#c084fc"
-    }
-  ];
-
-  const MOOD_RESPONSES: Record<string, string[]> = {
-    Happy: [
-      "That's great to hear!",
-      "tell me more, what happened?",
-      "your energy is contagious 🌸",
-      "happiness is rare these days",
-      "😊 same vibe honestly"
-    ],
-    Sad: [
-      "hey, I'm here 💙",
-      "want to talk about it?",
-      "it's okay to feel this way",
-      "you're not alone in this",
-      "I've been there too"
-    ],
-    Anxious: [
-      "take a breath with me 🌿",
-      "anxiety is so valid",
-      "what's been on your mind?",
-      "I understand completely",
-      "you're safe here"
-    ],
-    Angry: [
-      "ugh, same honestly",
-      "let it out, I'm listening",
-      "what happened?",
-      "that sounds really frustrating",
-      "anger means something mattered"
-    ],
-    Lonely: [
-      "glad you're here",
-      "I felt that 💙",
-      "loneliness hits differently at night",
-      "you found someone 🌸",
-      "tell me about your day?"
-    ],
-    Numb: [
-      "just existing today, same",
-      "sometimes words don't come — that's okay",
-      "I see you",
-      "numbness can feel like a heavy blanket",
-      "we don't have to talk"
-    ],
-    Stressed: [
-      "breathe. you've survived 100% of your hard days",
-      "what's piling up?",
-      "you're doing more than you think",
-      "stressed too, let's struggle together 😅",
-      "tell me what's going on?"
-    ],
-    Grateful: [
-      "that's beautiful 🌸",
-      "gratitude is underrated",
-      "tell me what you're grateful for!",
-      "this made me smile",
-      "grateful to meet you too 🌸"
-    ]
-  };
-
-  const OPENERS: Record<string, string[]> = {
-    Sad: ["hey", "been a rough day huh", "you there?"],
-    Happy: ["hey! 👋", "hi there 🌸", "hello!"],
-    Anxious: ["hey… you there?", "hi", "needed someone to talk to"],
-    Angry: ["ugh hey", "finally someone lol", "hi"],
-    Lonely: ["hey", "glad someone connected", "hi there 🌙"],
-    Numb: ["…hi", "hey", "just existing today haha"],
-    Stressed: ["hey", "finally logged in lol", "hi, rough day"],
-    Grateful: ["hi! 🌸", "hey!! 😊", "hello, good to meet you"]
-  };
 
   // Show notification
   const showNotification = (msg: string, type: string = "") => {
@@ -1109,108 +1011,6 @@ Reply: "${replyText.trim().slice(0, 300)}"`
     setPostsToday(count || 0);
   };
 
-  // Chat functions
-  const startChat = () => {
-    if (!myMood) {
-      showNotification("Pick a mood first 🌸");
-      return;
-    }
-
-    setChatPhase("searching");
-
-    setTimeout(() => {
-      const matched =
-        CHAT_MOODS.find((m) => m.label === myMood) || CHAT_MOODS[0];
-      setMatchedMood(matched);
-      setChatPhase("chat");
-      setChatMessages([
-        {
-          type: "system",
-          text: `Stranger connected · feeling ${matched.emoji} ${matched.label}`
-        }
-      ]);
-
-      const openerPool = OPENERS[matched.label] || ["hey"];
-      setTimeout(() => {
-        setChatMessages((prev) => [
-          ...prev,
-          {
-            type: "theirs",
-            text: openerPool[Math.floor(Math.random() * openerPool.length)],
-            time: "now"
-          }
-        ]);
-      }, 900);
-    }, 1600);
-  };
-
-  const sendChatMessage = () => {
-    if (!chatInput.trim()) return;
-
-    const txt = chatInput.trim();
-    setChatInput("");
-    setChatMessages((prev) => [
-      ...prev,
-      { type: "mine", text: txt, time: "now" }
-    ]);
-
-    setTimeout(() => {
-      const pool = MOOD_RESPONSES[matchedMood?.label] || MOOD_RESPONSES["Numb"];
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          type: "theirs",
-          text: pool[Math.floor(Math.random() * pool.length)],
-          time: "now"
-        }
-      ]);
-    }, 700);
-  };
-
-  const nextChat = () => {
-    setChatPhase("searching");
-    setChatMessages([]);
-
-    setTimeout(() => {
-      const newMatch =
-        CHAT_MOODS[Math.floor(Math.random() * CHAT_MOODS.length)];
-      setMatchedMood(newMatch);
-      setChatPhase("chat");
-      setChatMessages([
-        {
-          type: "system",
-          text: `New stranger connected · feeling ${newMatch.emoji} ${newMatch.label}`
-        }
-      ]);
-      setTimeout(() => {
-        setChatMessages((prev) => [
-          ...prev,
-          { type: "theirs", text: "hey 👋", time: "now" }
-        ]);
-      }, 900);
-    }, 1400);
-  };
-
-  const endChat = () => {
-    setChatMessages((prev) => [
-      ...prev,
-      { type: "system", text: "Chat ended. Take care 🌙" }
-    ]);
-    setTimeout(() => {
-      setChatPhase("pick");
-      setMyMood(null);
-      setMatchedMood(null);
-      setChatMessages([]);
-    }, 2200);
-  };
-
-  // Scroll chat to bottom
-  useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [chatMessages]);
-
   // Custom cursor effect
   useEffect(() => {
     // Create cursor element
@@ -1577,6 +1377,10 @@ Reply: "${replyText.trim().slice(0, 300)}"`
         }
       )
       .subscribe();
+    return () => {
+      listener.subscription.unsubscribe();
+      channel.unsubscribe();
+    };
   }, []);
 
   if (sessionLoading) {
@@ -2825,232 +2629,6 @@ Reply: "${replyText.trim().slice(0, 300)}"`
           displayName={displayName}
           showNotification={showNotification}
         />
-      </div>
-    </div>
-  );
-  // Chat View
-  const renderChat = () => {
-    if (chatPhase === "pick") {
-      return (
-        <div style={styles.chatContainer}>
-          <div style={styles.sectionTitle}>How are you feeling?</div>
-          <div style={styles.sectionSub}>
-            We'll match you with someone sharing a similar emotional space ✨
-          </div>
-          <div style={styles.moodGrid}>
-            {CHAT_MOODS.map((m) => (
-              <button
-                key={m.label}
-                style={{
-                  ...styles.moodBtn,
-                  borderColor:
-                    myMood === m.label ? m.color : "rgba(232,121,160,0.14)",
-                  background:
-                    myMood === m.label ? `${m.color}22` : "rgba(16,10,40,0.7)"
-                }}
-                onClick={() => setMyMood(m.label)}
-              >
-                <span style={styles.moodEmoji}>{m.emoji}</span>
-                <span style={styles.moodLabel}>{m.label}</span>
-                <span style={styles.moodDesc}>{m.desc}</span>
-              </button>
-            ))}
-          </div>
-          {myMood && (
-            <div style={styles.moodPreview}>
-              <span style={{ fontSize: 24 }}>
-                {CHAT_MOODS.find((m) => m.label === myMood)?.emoji}
-              </span>
-              <div style={{ marginLeft: 12 }}>
-                <div
-                  style={{ fontSize: 14, fontWeight: 600, color: "#a89bc2" }}
-                >
-                  You'll be matched with someone feeling similar
-                </div>
-                <div style={{ fontSize: 12, color: "#5b4d72" }}>
-                  Same or compatible moods · anonymous · safe
-                </div>
-              </div>
-            </div>
-          )}
-          <button style={styles.chatStartBtn} onClick={startChat}>
-            Find My Stranger ✨
-          </button>
-        </div>
-      );
-    }
-
-    if (chatPhase === "searching") {
-      return (
-        <div style={styles.chatSearching}>
-          <div style={{ fontSize: 52, marginBottom: 20 }}>
-            {CHAT_MOODS.find((m) => m.label === myMood)?.emoji}
-          </div>
-          <div style={styles.loadingDots}>
-            <span />
-            <span />
-            <span />
-          </div>
-          <p style={{ marginTop: 16, color: "#7c6a9a", fontSize: 15 }}>
-            Matching you with someone feeling{" "}
-            <strong style={{ color: "#e879a0" }}>{myMood}</strong>…
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <div style={styles.chatBox}>
-        <div style={styles.chatHeader}>
-          <div style={styles.chatStatusDot} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#a89bc2" }}>
-            Stranger
-          </span>
-          {matchedMood && (
-            <span style={styles.chatMoodPill}>
-              {matchedMood.emoji} {matchedMood.label}
-            </span>
-          )}
-          <span style={{ marginLeft: "auto", fontSize: 12, color: "#5b4d72" }}>
-            You: {CHAT_MOODS.find((m) => m.label === myMood)?.emoji} {myMood}
-          </span>
-        </div>
-        <div style={styles.chatMessages}>
-          {chatMessages.map((msg, i) =>
-            msg.type === "system" ? (
-              <div key={i} style={styles.chatSystem}>
-                {msg.text}
-              </div>
-            ) : (
-              <div
-                key={i}
-                style={{
-                  ...styles.msg,
-                  alignSelf: msg.type === "mine" ? "flex-end" : "flex-start"
-                }}
-              >
-                <div
-                  style={{
-                    ...styles.msgBubble,
-                    background:
-                      msg.type === "mine"
-                        ? "linear-gradient(135deg, #be185d, #e879a0)"
-                        : "rgba(28,18,50,0.92)",
-                    border:
-                      msg.type === "mine"
-                        ? "none"
-                        : "1px solid rgba(232,121,160,0.18)"
-                  }}
-                >
-                  {msg.text}
-                </div>
-                <div style={styles.msgTime}>{msg.time}</div>
-              </div>
-            )
-          )}
-          <div ref={chatEndRef} />
-        </div>
-        <div style={styles.chatInputArea}>
-          <div style={styles.chatInputRow}>
-            <input
-              style={styles.chatInput}
-              placeholder="Say something…"
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendChatMessage()}
-            />
-            <button style={styles.sendBtn} onClick={sendChatMessage}>
-              Send
-            </button>
-          </div>
-          <div style={styles.chatActions}>
-            <button style={styles.chatActionBtn} onClick={nextChat}>
-              ↪️ Next
-            </button>
-            <button style={styles.chatActionBtn} onClick={endChat}>
-              ✕ End
-            </button>
-            <button
-              style={styles.chatActionBtn}
-              onClick={() => showNotification("Reported anonymously.")}
-            >
-              ⚠️ Report
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Premium View
-  const renderPremium = () => (
-    <div style={styles.premiumContainer}>
-      <div style={styles.premiumHero}>
-        <div style={styles.premiumBadge}>✨ UnTale Premium</div>
-        <div style={styles.premiumTitle}>
-          More space.
-          <br />
-          More freedom.
-        </div>
-        <p style={styles.premiumSub}>
-          Unlock unlimited posts, unlimited chat, reconnect, and zero ads.
-        </p>
-      </div>
-
-      <div style={styles.benefitsGrid}>
-        {[
-          {
-            icon: "✍️",
-            title: "Post Anonymously",
-            desc: "Share your story. No account trails."
-          },
-          {
-            icon: "💬",
-            title: "Unlimited Chat",
-            desc: "No daily limits. Talk as long as you need."
-          },
-          {
-            icon: "🔄",
-            title: "Reconnect Chats",
-            desc: "Save and reconnect with understanding strangers."
-          },
-          { icon: "🚫", title: "Zero Ads", desc: "Pure, uninterrupted space." },
-          {
-            icon: "🏷️",
-            title: "Custom Alias",
-            desc: "Your recurring anonymous identity."
-          },
-          {
-            icon: "🌈",
-            title: "Mood Themes",
-            desc: "Exclusive sakura palettes."
-          }
-        ].map((b) => (
-          <div key={b.title} style={styles.benefitCard}>
-            <div style={styles.benefitIcon}>{b.icon}</div>
-            <h3 style={styles.benefitTitle}>{b.title}</h3>
-            <p style={styles.benefitDesc}>{b.desc}</p>
-          </div>
-        ))}
-      </div>
-
-      <div style={styles.priceCard}>
-        <div style={{ fontSize: 13, color: "#5b4d72", marginBottom: 10 }}>
-          Monthly Plan
-        </div>
-        <div style={styles.priceNum}>₹199</div>
-        <div style={styles.pricePeriod}>per month · cancel anytime</div>
-        <button
-          style={styles.upgradeBtn}
-          onClick={() =>
-            showNotification("Redirecting to checkout… 💎", "warn")
-          }
-        >
-          ✨ Upgrade Now
-        </button>
-        <p style={{ fontSize: 12, color: "#5b4d72" }}>
-          Secure payment · Instant activation
-        </p>
       </div>
     </div>
   );
