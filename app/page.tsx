@@ -66,6 +66,13 @@ const timeAgo = (dateString: string) => {
   if (mins >= 1) return Math.floor(mins) + "m ago";
   return "just now";
 };
+// ─────────────────────────────────────────────────────────────
+// REPLACE your entire FeedbackForm function with this.
+// Also add chipBase, qLabel, qSub constants right after it
+// (before the Home() export default).
+// Everything else in page.tsx stays exactly the same.
+// ─────────────────────────────────────────────────────────────
+
 function FeedbackForm({
   displayName,
   showNotification
@@ -73,224 +80,259 @@ function FeedbackForm({
   displayName: string;
   showNotification: (msg: string, type?: string) => void;
 }) {
-  const [rating, setRating] = useState("");
-  const [mostUsed, setMostUsed] = useState("");
+  const [feeling, setFeeling] = useState("");
+  const [safeFeeling, setSafeFeeling] = useState("");
   const [wantNext, setWantNext] = useState<string[]>([]);
-  const [suggestion, setSuggestion] = useState("");
+  const [broken, setBroken] = useState("");
+  const [freeText, setFreeText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const RATINGS = [
-    "😍 Love it",
-    "😊 It's good",
-    "😐 It's okay",
-    "😔 Needs work"
-  ];
-  const FEATURES_USED = [
-    "📝 Posting",
-    "❤️ Liking posts",
-    "💬 Replying",
-    "👀 Just reading"
-  ];
-  const NEXT_FEATURES = [
-    "💬 Anonymous chat",
-    "🎭 Mood tags",
-    "🔔 Notifications",
-    "🌙 Dark themes",
-    "🏆 Top stories",
-    "🔒 Save posts"
+  const FEELINGS = [
+    { emoji: "🥹", label: "Felt heard" },
+    { emoji: "😌", label: "Felt calm" },
+    { emoji: "😐", label: "Felt nothing" },
+    { emoji: "😕", label: "Felt confused" },
+    { emoji: "😔", label: "Felt lonely still" }
   ];
 
-  const toggleWantNext = (f: string) => {
+  const SAFE_OPTIONS = [
+    "Yes, completely",
+    "Mostly yes",
+    "Not sure",
+    "Not really"
+  ];
+
+  const NEXT_FEATURES = [
+    { emoji: "💬", label: "Anonymous chat with real people" },
+    { emoji: "🎭", label: "Mood tags on posts" },
+    { emoji: "🔔", label: "Notify me when someone replies" },
+    { emoji: "🌙", label: "Different themes / dark modes" },
+    { emoji: "📌", label: "Save posts I like" },
+    { emoji: "🗓️", label: "Daily prompt to write" }
+  ];
+
+  const BROKEN_OPTIONS = [
+    "Nothing, all good",
+    "Login / signup was confusing",
+    "Feed didn't load properly",
+    "Replies didn't work",
+    "Something else"
+  ];
+
+  const toggleWantNext = (label: string) => {
     setWantNext((prev) =>
-      prev.includes(f)
-        ? prev.filter((x) => x !== f)
+      prev.includes(label)
+        ? prev.filter((x) => x !== label)
         : prev.length < 3
-          ? [...prev, f]
+          ? [...prev, label]
           : prev
     );
   };
 
   const handleSubmit = async () => {
-    if (!rating) {
-      showNotification("Tell us how you feel about UnTale first 🌸");
+    if (!feeling) {
+      showNotification("Tell us how UnTale made you feel first 🌸");
       return;
     }
+
     setSubmitting(true);
+
     const { error } = await supabase.from("feedback").insert([
       {
-        feeling: rating,
-        most_used: mostUsed || null,
+        feeling: feeling,
+        safe_feeling: safeFeeling || null,
         want_next: wantNext.length > 0 ? wantNext : null,
-        suggestion: suggestion.trim() || null,
-        display_name: displayName || "anonymous"
+        broken: broken || null,
+        suggestion: freeText.trim() || null,
+        display_name: "anonymous"
       }
     ]);
+
     if (error) {
       showNotification("Something went wrong. Try again.");
     } else {
       setSubmitted(true);
       showNotification("Thank you 🌸 Your voice shapes UnTale.", "success");
     }
+
     setSubmitting(false);
   };
 
   if (submitted) {
     return (
-      <div style={{ textAlign: "center", padding: "20px 0" }}>
-        <div style={{ fontSize: "48px", marginBottom: "16px" }}>🌸</div>
+      <div style={{ textAlign: "center", padding: "24px 0" }}>
+        <div style={{ fontSize: "52px", marginBottom: "16px" }}>🌸</div>
         <p
           style={{
             color: "#e879a0",
-            fontSize: "18px",
-            fontWeight: 600,
-            marginBottom: "8px"
+            fontSize: "20px",
+            fontWeight: 700,
+            marginBottom: "8px",
+            fontFamily: "'Playfair Display', serif"
           }}
         >
           Thank you.
         </p>
-        <p style={{ color: "#7c6a9a", fontSize: "14px", lineHeight: 1.7 }}>
-          Every response helps decide what UnTale becomes next.
+        <p
+          style={{
+            color: "#7c6a9a",
+            fontSize: "14px",
+            lineHeight: 1.8,
+            maxWidth: "340px",
+            margin: "0 auto"
+          }}
+        >
+          Every response helps us decide what UnTale becomes next. You're part
+          of building something real.
         </p>
       </div>
     );
   }
 
+  const chipBase: React.CSSProperties = {
+    padding: "8px 16px",
+    borderRadius: "50px",
+    border: "1.5px solid",
+    background: "transparent",
+    fontSize: "13px",
+    cursor: "pointer",
+    fontFamily: "'DM Sans', sans-serif",
+    transition: "all 0.2s"
+  };
+
+  const qLabel: React.CSSProperties = {
+    fontSize: "14px",
+    color: "#a89bc2",
+    fontWeight: 600,
+    marginBottom: "4px"
+  };
+
+  const qSub: React.CSSProperties = {
+    fontSize: "12px",
+    color: "#5b4d72",
+    marginBottom: "12px"
+  };
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
-      {/* Q1 */}
+    <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+      {/* Q1 — emotional experience */}
       <div>
-        <p
-          style={{
-            fontSize: "14px",
-            color: "#a89bc2",
-            marginBottom: "12px",
-            fontWeight: 600
-          }}
-        >
-          1. How do you feel about UnTale so far?
-        </p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-          {RATINGS.map((r) => (
+        <p style={qLabel}>1. How did UnTale make you feel?</p>
+        <p style={qSub}>Pick the one that fits most.</p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+          {FEELINGS.map((f) => (
             <button
-              key={r}
-              onClick={() => setRating(r)}
+              key={f.label}
+              onClick={() => setFeeling(f.label)}
               style={{
-                padding: "8px 16px",
-                borderRadius: "50px",
-                border: `1.5px solid ${rating === r ? "#e879a0" : "rgba(232,121,160,0.2)"}`,
+                ...chipBase,
+                borderColor:
+                  feeling === f.label ? "#e879a0" : "rgba(232,121,160,0.2)",
                 background:
-                  rating === r ? "rgba(232,121,160,0.15)" : "transparent",
-                color: rating === r ? "#e879a0" : "#a89bc2",
-                fontSize: "13px",
-                cursor: "pointer",
-                fontFamily: "'DM Sans', sans-serif",
-                transition: "all 0.2s"
+                  feeling === f.label
+                    ? "rgba(232,121,160,0.15)"
+                    : "transparent",
+                color: feeling === f.label ? "#e879a0" : "#a89bc2"
               }}
             >
-              {r}
+              {f.emoji} {f.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Q2 */}
+      {/* Q2 — safety */}
       <div>
-        <p
-          style={{
-            fontSize: "14px",
-            color: "#a89bc2",
-            marginBottom: "12px",
-            fontWeight: 600
-          }}
-        >
-          2. What did you use the most?
-        </p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-          {FEATURES_USED.map((f) => (
+        <p style={qLabel}>2. Did this space feel safe to you?</p>
+        <p style={qSub}>Safety is the most important thing we're building.</p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+          {SAFE_OPTIONS.map((o) => (
             <button
-              key={f}
-              onClick={() => setMostUsed(f)}
+              key={o}
+              onClick={() => setSafeFeeling(o)}
               style={{
-                padding: "8px 16px",
-                borderRadius: "50px",
-                border: `1.5px solid ${mostUsed === f ? "#c084fc" : "rgba(192,132,200,0.2)"}`,
+                ...chipBase,
+                borderColor:
+                  safeFeeling === o ? "#60a5fa" : "rgba(96,165,250,0.2)",
                 background:
-                  mostUsed === f ? "rgba(192,132,200,0.15)" : "transparent",
-                color: mostUsed === f ? "#c084fc" : "#a89bc2",
-                fontSize: "13px",
-                cursor: "pointer",
-                fontFamily: "'DM Sans', sans-serif",
-                transition: "all 0.2s"
+                  safeFeeling === o ? "rgba(96,165,250,0.15)" : "transparent",
+                color: safeFeeling === o ? "#60a5fa" : "#a89bc2"
               }}
             >
-              {f}
+              {o}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Q3 */}
+      {/* Q3 — what to build next */}
       <div>
-        <p
-          style={{
-            fontSize: "14px",
-            color: "#a89bc2",
-            marginBottom: "4px",
-            fontWeight: 600
-          }}
-        >
-          3. What should we build next?{" "}
-          <span style={{ color: "#5b4d72", fontWeight: 400 }}>
-            (pick up to 3)
-          </span>
+        <p style={qLabel}>3. What would make UnTale better for you?</p>
+        <p style={qSub}>
+          Pick up to 3. These directly shape what we build next.
         </p>
-        <p style={{ fontSize: "12px", color: "#5b4d72", marginBottom: "12px" }}>
+        <p style={{ fontSize: "11px", color: "#5b4d72", marginBottom: "10px" }}>
           {wantNext.length}/3 selected
         </p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
           {NEXT_FEATURES.map((f) => (
             <button
-              key={f}
-              onClick={() => toggleWantNext(f)}
+              key={f.label}
+              onClick={() => toggleWantNext(f.label)}
               style={{
-                padding: "8px 16px",
-                borderRadius: "50px",
-                border: `1.5px solid ${wantNext.includes(f) ? "#60a5fa" : "rgba(96,165,250,0.2)"}`,
-                background: wantNext.includes(f)
-                  ? "rgba(96,165,250,0.15)"
+                ...chipBase,
+                borderColor: wantNext.includes(f.label)
+                  ? "#c084fc"
+                  : "rgba(192,132,200,0.2)",
+                background: wantNext.includes(f.label)
+                  ? "rgba(192,132,200,0.15)"
                   : "transparent",
-                color: wantNext.includes(f) ? "#60a5fa" : "#a89bc2",
-                fontSize: "13px",
-                cursor: "pointer",
-                fontFamily: "'DM Sans', sans-serif",
-                transition: "all 0.2s",
-                opacity: !wantNext.includes(f) && wantNext.length >= 3 ? 0.4 : 1
+                color: wantNext.includes(f.label) ? "#c084fc" : "#a89bc2",
+                opacity:
+                  !wantNext.includes(f.label) && wantNext.length >= 3 ? 0.4 : 1
               }}
             >
-              {f}
+              {f.emoji} {f.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Q4 */}
+      {/* Q4 — what broke */}
       <div>
-        <p
-          style={{
-            fontSize: "14px",
-            color: "#a89bc2",
-            marginBottom: "10px",
-            fontWeight: 600
-          }}
-        >
-          4. Anything else you want to tell us?{" "}
+        <p style={qLabel}>4. Did anything feel broken or confusing?</p>
+        <p style={qSub}>Be honest — we won't take it personally.</p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+          {BROKEN_OPTIONS.map((o) => (
+            <button
+              key={o}
+              onClick={() => setBroken(o)}
+              style={{
+                ...chipBase,
+                borderColor: broken === o ? "#f87171" : "rgba(248,113,113,0.2)",
+                background:
+                  broken === o ? "rgba(248,113,113,0.12)" : "transparent",
+                color: broken === o ? "#f87171" : "#a89bc2"
+              }}
+            >
+              {o}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Q5 — free text */}
+      <div>
+        <p style={qLabel}>
+          5. Anything else?{" "}
           <span style={{ color: "#5b4d72", fontWeight: 400 }}>(optional)</span>
         </p>
+        <p style={qSub}>A feeling, a suggestion, a complaint — all welcome.</p>
         <textarea
-          value={suggestion}
-          onChange={(e) => setSuggestion(e.target.value)}
-          placeholder="Your honest thoughts, ideas, complaints — all welcome…"
+          value={freeText}
+          onChange={(e) => setFreeText(e.target.value)}
+          placeholder="Write freely here…"
           maxLength={500}
           style={{
             width: "100%",
@@ -316,13 +358,14 @@ function FeedbackForm({
             marginTop: 3
           }}
         >
-          {suggestion.length}/500
+          {freeText.length}/500
         </div>
       </div>
 
+      {/* Submit */}
       <button
         onClick={handleSubmit}
-        disabled={submitting || !rating}
+        disabled={submitting || !feeling}
         style={{
           padding: "13px",
           background: "linear-gradient(135deg, #be185d, #e879a0)",
@@ -331,8 +374,8 @@ function FeedbackForm({
           borderRadius: "50px",
           fontWeight: "700",
           fontSize: "15px",
-          cursor: submitting || !rating ? "not-allowed" : "pointer",
-          opacity: submitting || !rating ? 0.5 : 1,
+          cursor: submitting || !feeling ? "not-allowed" : "pointer",
+          opacity: submitting || !feeling ? 0.5 : 1,
           fontFamily: "'DM Sans', sans-serif",
           transition: "all 0.25s"
         }}
@@ -342,7 +385,6 @@ function FeedbackForm({
     </div>
   );
 }
-
 export default function Home() {
   // State
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
@@ -384,6 +426,7 @@ export default function Home() {
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const userRef = useRef<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [notifs, setNotifs] = useState<any[]>([]);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
@@ -575,7 +618,15 @@ export default function Home() {
     }
 
     if (data) {
-      setPosts((prev) => (append ? [...prev, ...data] : data));
+      setPosts((prev) => {
+        const merged = append ? [...prev, ...data] : data;
+        const seen = new Set<number>();
+        return merged.filter((p) => {
+          if (seen.has(p.id)) return false;
+          seen.add(p.id);
+          return true;
+        });
+      });
       setHasMore(data.length === PAGE_SIZE);
       setPage(pageNum);
       await loadReplyCounts();
@@ -628,7 +679,79 @@ export default function Home() {
       });
     }
   };
+  const containsBadContent = (content: string): string | null => {
+    const lower = content.toLowerCase();
 
+    const patterns: { regex: RegExp; msg: string }[] = [
+      // Personal info sharing / fishing
+      {
+        regex: /\b(\d{10}|\d{3}[-.\s]\d{3}[-.\s]\d{4})\b/,
+        msg: "Please don't share phone numbers 🌸"
+      },
+      {
+        regex: /\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}\b/,
+        msg: "Please don't share email addresses 🌸"
+      },
+      {
+        regex: /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/,
+        msg: "Please don't share card or account numbers 🌸"
+      },
+      {
+        regex:
+          /(what'?s?\s+i?s?\s*ur|what\s+is\s+ur|what'?s\s+your|whats\s+your)\s*(num(ber|b|br|ber)?|ph(one|n|one)?|no\.?|contact|addr(ess)?|loc(ation)?|insta(gram)?|snap(chat)?|whats\s*app|disc(ord)?|tele(gram)?|gmail|mail|email)/i,
+        msg: "Please don't ask others for personal information 🌸"
+      },
+      {
+        regex:
+          /(send|drop|share|give|pass|shoot|lmk|hmu|hit\s*me\s*up).{0,20}(num(ber|b|br)?|ph(one|n)?|no\.?|contact|insta|snap|disc(ord)?|tele(gram)?|whats\s*app|email|gmail)/i,
+        msg: "Please don't ask others for personal information 🌸"
+      },
+      {
+        regex:
+          /(dm\s*me|text\s*me|msg\s*me|message\s*me|reach\s*me|contact\s*me|find\s*me\s*on|add\s*me\s*on)/i,
+        msg: "Please don't ask others for personal information 🌸"
+      },
+      // Illegal / dangerous
+      {
+        regex:
+          /\b(buy|sell|selling|buying|deal|dealer)\b.{0,30}\b(drugs?|weed|cocaine|meth|heroin|xanax|pills?|mdma|lsd)\b/i,
+        msg: "That content isn't allowed here 🌸"
+      },
+      {
+        regex: /\b(cp|child porn|csam|minor.{0,10}(nude|naked|sex))\b/i,
+        msg: "That content is not allowed here."
+      },
+      {
+        regex:
+          /\b(how to (make|build|create).{0,20}(bomb|weapon|explosive|poison))\b/i,
+        msg: "That content isn't allowed here 🌸"
+      },
+      // Hate / slurs (add more as needed)
+      {
+        regex: /\b(n[i1]gg[ae]r|f[a4]gg[o0]t|k[i1]ke|ch[i1]nk|sp[i1][ck])\b/i,
+        msg: "Slurs and hate speech aren't welcome here 🌸"
+      },
+      // Scam / spam
+      {
+        regex:
+          /(follow me on|check out my|subscribe to|click this link|bit\.ly|tinyurl|free money|win \$|you've won)/i,
+        msg: "Spam or promotional content isn't allowed here 🌸"
+      },
+      // Self-harm promotion (not discussion — promotion)
+      {
+        regex:
+          /(how to (kill yourself|commit suicide|end your life)|step[s]? to suicide)/i,
+        msg: "If you're struggling, you're not alone. Please reach out to someone 🌸"
+      }
+    ];
+
+    for (const { regex, msg } of patterns) {
+      if (regex.test(lower) || regex.test(content)) {
+        return msg;
+      }
+    }
+    return null;
+  };
   // Create a new post - FIXED VERSION
   const createPost = async () => {
     if (!text.trim()) {
@@ -646,7 +769,51 @@ export default function Home() {
       );
       return;
     }
+    // ─── content filter ───────────────────────────────────────
+    const flagged = containsBadContent(text.trim());
+    if (flagged) {
+      showNotification(flagged, "warn");
+      return;
+    }
+    // ──────────────────────────────────────────────────────────
     setPosting(true);
+
+    // ─── AI moderation ────────────────────────────────────────
+    try {
+      const modRes = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 60,
+          messages: [
+            {
+              role: "user",
+              content: `You are a content moderator for an anonymous mental health / emotional support community called UnTale. People share feelings, struggles, and stories here.
+
+Review this post and reply with ONLY one of:
+- "ALLOW" if it's a genuine emotional post (sadness, anxiety, venting, love, anger, happiness, trauma, etc.)
+- "BLOCK: [short reason]" if it contains: personal info (phone/email/address), requests for personal info, illegal activity, hate speech, slurs, spam/promotion, explicit sexual content, content that sexualizes minors, or instructions for self-harm methods.
+
+Be LENIENT. Dark emotions, swearing, and heavy topics are allowed. Only block clear violations.
+
+Post: "${text.trim().slice(0, 500)}"`
+            }
+          ]
+        })
+      });
+      const modData = await modRes.json();
+      const verdict = modData?.content?.[0]?.text?.trim() ?? "ALLOW";
+      if (verdict.startsWith("BLOCK")) {
+        const reason = verdict.replace("BLOCK:", "").trim();
+        showNotification(`This post can't be shared: ${reason} 🌸`, "warn");
+        setPosting(false);
+        return;
+      }
+    } catch {
+      // If AI check fails, allow the post (don't block on API errors)
+    }
+    // ──────────────────────────────────────────────────────────
     const { error } = await supabase.from("posts").insert([
       {
         content: text.trim(),
@@ -668,6 +835,7 @@ export default function Home() {
   // Handle user session
   const handleUserSession = async (authUser: any): Promise<string> => {
     setUser(authUser);
+    userRef.current = authUser;
     const existingName = authUser.user_metadata?.display_name;
     if (existingName) {
       setDisplayName(existingName);
@@ -680,19 +848,6 @@ export default function Home() {
     if (!error) setDisplayName(newName);
     return newName;
   };
-
-  const handleLogout = async () => {
-    // Sign out and immediately create a new anonymous session
-    await supabase.auth.signOut();
-    const { data, error } = await supabase.auth.signInAnonymously();
-    if (!error && data.user) {
-      await handleUserSession(data.user);
-      await loadPosts(0, false, data.user.id);
-    }
-    setCurrentPage("home");
-    showNotification("New anonymous identity created 🌸");
-  };
-
   // Post interactions
   const handleLike = async (postId: number) => {
     if (!user) return;
@@ -786,7 +941,45 @@ export default function Home() {
       showNotification("Write something first 🌸");
       return;
     }
+
+    const replyFlagged = containsBadContent(replyText.trim());
+    if (replyFlagged) {
+      showNotification(replyFlagged, "warn");
+      return;
+    }
+
     setReplySubmitting(true);
+
+    try {
+      const modRes = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 60,
+          messages: [
+            {
+              role: "user",
+              content: `You moderate an anonymous emotional support community. Review this reply and respond ONLY with "ALLOW" or "BLOCK: [reason]".
+
+ALWAYS BLOCK if the reply asks for or shares: phone numbers, emails, addresses, social media handles, Discord, Telegram, WhatsApp. This includes typos and shorthand like "numer", "num", "phne", "ur num", "yr number", "gib number", "wat is ur num", "drop ur no", "hmu", "hit me up", "dm me", "text me", "find me on", "add me on". If someone is clearly trying to get or share contact info in any form, BLOCK it.
+
+Reply: "${replyText.trim().slice(0, 300)}"`
+            }
+          ]
+        })
+      });
+      const modData = await modRes.json();
+      const verdict = modData?.content?.[0]?.text?.trim() ?? "ALLOW";
+      if (verdict.startsWith("BLOCK")) {
+        const reason = verdict.replace("BLOCK:", "").trim();
+        showNotification(`This reply can't be posted: ${reason} 🌸`, "warn");
+        setReplySubmitting(false);
+        return;
+      }
+    } catch {
+      // Allow on API error
+    }
 
     const { data, error } = await supabase
       .from("replies")
@@ -826,7 +1019,11 @@ export default function Home() {
       if (data) {
         setRepliesMap((prev) => {
           const next = new Map(prev);
-          next.set(postId, [...(prev.get(postId) || []), data]);
+          const existing = prev.get(postId) || [];
+          // Only add if not already present (prevents duplicate with realtime)
+          if (!existing.find((r: any) => r.id === data.id)) {
+            next.set(postId, [...existing, data]);
+          }
           return next;
         });
       }
@@ -1305,10 +1502,14 @@ export default function Home() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "posts" },
         (payload) => {
-          setPosts((prev) => [payload.new as Post, ...prev]);
+          const newPost = payload.new as Post;
+          setPosts((prev) => {
+            if (prev.some((p) => p.id === newPost.id)) return prev;
+            return [newPost, ...prev];
+          });
           setLikesCount((prev) => {
             const next = new Map(prev);
-            next.set((payload.new as Post).id, 0);
+            if (!next.has(newPost.id)) next.set(newPost.id, 0);
             return next;
           });
         }
@@ -1317,10 +1518,11 @@ export default function Home() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "likes" },
         (payload) => {
-          const postId = (payload.new as any).post_id;
+          const newLike = payload.new as any;
+          if (newLike.user_id === userRef.current?.id) return; // skip own action
           setLikesCount((prev) => {
             const next = new Map(prev);
-            next.set(postId, (next.get(postId) || 0) + 1);
+            next.set(newLike.post_id, (next.get(newLike.post_id) || 0) + 1);
             return next;
           });
         }
@@ -1329,10 +1531,14 @@ export default function Home() {
         "postgres_changes",
         { event: "DELETE", schema: "public", table: "likes" },
         (payload) => {
-          const postId = (payload.old as any).post_id;
+          const oldLike = payload.old as any;
+          if (oldLike.user_id === userRef.current?.id) return; // skip own action
           setLikesCount((prev) => {
             const next = new Map(prev);
-            next.set(postId, Math.max(0, (next.get(postId) || 0) - 1));
+            next.set(
+              oldLike.post_id,
+              Math.max(0, (next.get(oldLike.post_id) || 0) - 1)
+            );
             return next;
           });
         }
@@ -1342,6 +1548,7 @@ export default function Home() {
         { event: "INSERT", schema: "public", table: "replies" },
         (payload) => {
           const postId = (payload.new as any).post_id;
+          const newReply = payload.new as any;
           setReplyCounts((prev) => {
             const next = new Map(prev);
             next.set(postId, (next.get(postId) || 0) + 1);
@@ -1350,7 +1557,11 @@ export default function Home() {
           setRepliesMap((prev) => {
             const next = new Map(prev);
             if (next.has(postId)) {
-              next.set(postId, [...(next.get(postId) || []), payload.new]);
+              const existing = next.get(postId) || [];
+              // Only add if not already present (prevents duplicate with handleReply)
+              if (!existing.find((r: any) => r.id === newReply.id)) {
+                next.set(postId, [...existing, newReply]);
+              }
             }
             return next;
           });
@@ -1360,7 +1571,7 @@ export default function Home() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications" },
         (payload) => {
-          if ((payload.new as any).user_id === user?.id) {
+          if ((payload.new as any).user_id === userRef.current?.id) {
             setNotifs((prev) => [payload.new, ...prev]);
           }
         }
@@ -1379,67 +1590,6 @@ export default function Home() {
     );
   }
 
-  // HOME PAGE COMPONENT
-  // const renderHome = () => (
-  //   <div>
-  //     <div style={styles.hero}>
-  //       <div style={styles.heroLogo}>🌸</div>
-  //       <h1 style={styles.heroTitle}>
-  //         Tell what remains
-  //         <br />
-  //         <em style={{ color: "#e879a0", fontStyle: "italic" }}>untold.</em>
-  //       </h1>
-  //       <p style={styles.heroSubtitle}>
-  //         An anonymous space to share your truest thoughts, find comfort in
-  //         strangers, and be wholly, unguardedly yourself.
-  //       </p>
-  //       <div style={styles.heroButtons}>
-  //         <button
-  //           style={styles.btnPrimary}
-  //           onClick={() => setCurrentPage("feed")}
-  //         >
-  //           ✍️ Start Posting
-  //         </button>
-  //         <button
-  //           style={styles.btnGhost}
-  //           onClick={() => setCurrentPage("chat")}
-  //         >
-  //           💬 Talk to Someone
-  //         </button>
-  //       </div>
-  //     </div>
-  //     <div style={styles.featuresGrid}>
-  //       {[
-  //         {
-  //           icon: "🎭",
-  //           title: "Truly Anonymous",
-  //           desc: "No names, no photos, no traces. Just your words, floating free."
-  //         },
-  //         {
-  //           icon: "💬",
-  //           title: "Mood-Matched Chat",
-  //           desc: "Connect with a stranger who feels exactly the way you do right now."
-  //         },
-  //         {
-  //           icon: "🌸",
-  //           title: "Safe Space",
-  //           desc: "Community guidelines exist. Kindness is the default here."
-  //         },
-  //         {
-  //           icon: "🔒",
-  //           title: "Your Privacy First",
-  //           desc: "We don't store identifiable data. Your secrets stay yours."
-  //         }
-  //       ].map((f) => (
-  //         <div key={f.title} style={styles.featureCard}>
-  //           <div style={styles.featureIcon}>{f.icon}</div>
-  //           <h3 style={styles.featureTitle}>{f.title}</h3>
-  //           <p style={styles.featureDesc}>{f.desc}</p>
-  //         </div>
-  //       ))}
-  //     </div>
-  //   </div>
-  // );
   const renderAbout = () => (
     <div style={{ maxWidth: "640px", margin: "0 auto", padding: "40px 0" }}>
       <div
@@ -1767,12 +1917,39 @@ export default function Home() {
           <button
             style={styles.btnPrimary}
             onClick={() => setCurrentPage("feed")}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.transform =
+                "translateY(-3px)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                "0 12px 32px rgba(190,24,93,0.55)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.transform =
+                "translateY(0)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                "0 4px 18px rgba(190,24,93,0.38)";
+            }}
           >
             ✍️ Start Writing
           </button>
           <button
             style={styles.btnGhost}
             onClick={() => setCurrentPage("about")}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.transform =
+                "translateY(-3px)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                "0 12px 32px rgba(192,132,200,0.25)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor =
+                "rgba(192,132,200,0.7)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.transform =
+                "translateY(0)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+              (e.currentTarget as HTMLButtonElement).style.borderColor =
+                "rgba(192,132,200,0.35)";
+            }}
           >
             What is UnTale?
           </button>
@@ -1868,7 +2045,22 @@ export default function Home() {
       {/* Bottom CTA */}
       <div style={styles.bottomCta}>
         <p style={styles.ctaText}>Your story deserves to be heard.</p>
-        <button style={styles.ctaBtn} onClick={() => setCurrentPage("feed")}>
+        <button
+          style={styles.ctaBtn}
+          onClick={() => setCurrentPage("feed")}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.transform =
+              "translateY(-3px)";
+            (e.currentTarget as HTMLButtonElement).style.boxShadow =
+              "0 14px 36px rgba(190,24,93,0.55)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.transform =
+              "translateY(0)";
+            (e.currentTarget as HTMLButtonElement).style.boxShadow =
+              "0 6px 28px rgba(190,24,93,0.4)";
+          }}
+        >
           🌸 Release Your Story
         </button>
       </div>
@@ -1939,7 +2131,7 @@ export default function Home() {
           )}
 
           {filteredPosts.map((p) => (
-            <div key={p.id} style={styles.postCard}>
+            <div key={p.id} id={`post-${p.id}`} style={styles.postCard}>
               <div style={styles.postHeader}>
                 <div style={styles.anonAvatar}>🌸</div>
                 <div style={styles.postAuthor}>{p.display_name}</div>
@@ -2210,7 +2402,14 @@ export default function Home() {
                         gap: 10
                       }}
                     >
-                      {(repliesMap.get(p.id) || []).map((r: any) => (
+                      {Array.from(
+                        new Map(
+                          (repliesMap.get(p.id) || []).map((r: any) => [
+                            r.id,
+                            r
+                          ])
+                        ).values()
+                      ).map((r: any) => (
                         <div
                           key={r.id}
                           style={{
@@ -2904,7 +3103,6 @@ export default function Home() {
             Feedback
           </button>
           <div style={styles.userSection}>
-            <div style={styles.userAvatar}>🌸</div>
             {/* Bell */}
             <div style={{ position: "relative" }}>
               <button
@@ -2913,34 +3111,40 @@ export default function Home() {
                   if (!showNotifDropdown) markAllRead();
                 }}
                 style={{
-                  background: "transparent",
-                  border: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: showNotifDropdown
+                    ? "rgba(232,121,160,0.2)"
+                    : "rgba(232,121,160,0.08)",
+                  border: "1px solid rgba(232,121,160,0.28)",
+                  borderRadius: "50px",
+                  color: "#e879a0",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  padding: "7px 14px",
                   cursor: "pointer",
-                  fontSize: "20px",
-                  position: "relative",
-                  padding: "4px"
+                  fontFamily: "'DM Sans', sans-serif",
+                  transition: "background 0.2s"
                 }}
               >
-                🔔
-                {unreadCount > 0 && (
+                🌸
+                {unreadCount > 0 ? (
                   <span
                     style={{
-                      position: "absolute",
-                      top: 0,
-                      right: 0,
-                      background: "#e879a0",
+                      background: "linear-gradient(135deg, #be185d, #e879a0)",
                       color: "#fff",
                       fontSize: "10px",
                       fontWeight: 700,
-                      borderRadius: "50%",
-                      width: "16px",
-                      height: "16px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center"
+                      borderRadius: "50px",
+                      padding: "1px 7px"
                     }}
                   >
                     {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                ) : (
+                  <span style={{ color: "#a89bc2", fontSize: "12px" }}>
+                    updates
                   </span>
                 )}
               </button>
@@ -2994,6 +3198,27 @@ export default function Home() {
                       {notifs.map((n) => (
                         <div
                           key={n.id}
+                          onClick={() => {
+                            setShowNotifDropdown(false);
+                            setCurrentPage("feed");
+                            setTimeout(() => {
+                              const el = document.getElementById(
+                                `post-${n.post_id}`
+                              );
+                              if (el) {
+                                el.scrollIntoView({
+                                  behavior: "smooth",
+                                  block: "center"
+                                });
+                                el.style.transition = "box-shadow 0.4s ease";
+                                el.style.boxShadow =
+                                  "0 0 0 2px rgba(232,121,160,0.7)";
+                                setTimeout(() => {
+                                  el.style.boxShadow = "";
+                                }, 2000);
+                              }
+                            }, 200);
+                          }}
                           style={{
                             padding: "10px 12px",
                             borderRadius: "10px",
@@ -3003,8 +3228,19 @@ export default function Home() {
                             border: "1px solid rgba(232,121,160,0.08)",
                             fontSize: "13px",
                             color: "#d8cff0",
-                            lineHeight: 1.5
+                            lineHeight: 1.5,
+                            cursor: "pointer",
+                            transition: "background 0.15s"
                           }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.background =
+                              "rgba(232,121,160,0.15)")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.background = n.read
+                              ? "transparent"
+                              : "rgba(232,121,160,0.08)")
+                          }
                         >
                           {n.type === "like"
                             ? `❤️ ${n.triggered_by} liked your post`
@@ -3026,13 +3262,6 @@ export default function Home() {
               )}
             </div>
             <span style={styles.userName}>{displayName}</span>
-            <button
-              onClick={handleLogout}
-              style={styles.logoutButton}
-              title="Start fresh with a new anonymous identity"
-            >
-              New identity
-            </button>
           </div>
         </div>
         <button
@@ -3083,9 +3312,6 @@ export default function Home() {
             }}
           >
             Feedback
-          </button>
-          <button style={styles.mobileLink} onClick={handleLogout}>
-            New identity 🌸
           </button>
         </div>
       )}
@@ -3406,7 +3632,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "15px",
     fontWeight: "600",
     cursor: "pointer",
-    boxShadow: "0 4px 18px rgba(190,24,93,0.38)"
+    boxShadow: "0 4px 18px rgba(190,24,93,0.38)",
+    transition: "transform 0.25s ease, box-shadow 0.25s ease"
   },
   btnGhost: {
     background: "transparent",
@@ -3417,7 +3644,9 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: "'DM Sans', sans-serif",
     fontSize: "15px",
     fontWeight: "500",
-    cursor: "pointer"
+    cursor: "pointer",
+    transition:
+      "transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease"
   },
   heroStats: {
     display: "flex",
