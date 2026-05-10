@@ -66,12 +66,6 @@ const timeAgo = (dateString: string) => {
   if (mins >= 1) return Math.floor(mins) + "m ago";
   return "just now";
 };
-// ─────────────────────────────────────────────────────────────
-// REPLACE your entire FeedbackForm function with this.
-// Also add chipBase, qLabel, qSub constants right after it
-// (before the Home() export default).
-// Everything else in page.tsx stays exactly the same.
-// ─────────────────────────────────────────────────────────────
 
 function FeedbackForm({
   displayName,
@@ -415,6 +409,7 @@ function FeedbackForm({
     </div>
   );
 }
+
 export default function Home() {
   // State
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
@@ -456,11 +451,39 @@ export default function Home() {
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
+
   const userRef = useRef<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [notifs, setNotifs] = useState<any[]>([]);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const unreadCount = notifs.filter((n) => !n.read).length;
+
+  // ─── FIX 1: Close mobile menu when tapping outside ───────────────────────
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const hamburgerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node;
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(target) &&
+        hamburgerRef.current &&
+        !hamburgerRef.current.contains(target)
+      ) {
+        setMobileMenuOpen(false);
+        setShowNotifDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("touchstart", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [mobileMenuOpen]);
+  // ─────────────────────────────────────────────────────────────────────────
 
   const loadNotifications = async (userId: string) => {
     const { data } = await supabase
@@ -481,6 +504,7 @@ export default function Home() {
       .eq("read", false);
     setNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
   };
+
   const filteredPosts = searchQuery.trim()
     ? posts.filter((p) => {
         const q = searchQuery.toLowerCase().trim();
@@ -570,7 +594,6 @@ export default function Home() {
       return next;
     });
 
-    // Use passed userId OR fall back to current user state
     const userId = currentUserId || user?.id;
     if (!userId) return;
 
@@ -588,11 +611,11 @@ export default function Home() {
       });
     }
   };
+
   const containsBadContent = (content: string): string | null => {
     const lower = content.toLowerCase();
 
     const patterns: { regex: RegExp; msg: string }[] = [
-      // Personal info sharing / fishing
       {
         regex: /\bkill\s*(my|your|him|her|them)?self\b/i,
         msg: "If you're struggling, you're not alone 🌸"
@@ -641,7 +664,6 @@ export default function Home() {
           /(dm\s*me|text\s*me|msg\s*me|message\s*me|reach\s*me|contact\s*me|find\s*me\s*on|add\s*me\s*on)/i,
         msg: "Please don't ask others for personal information 🌸"
       },
-      // Illegal / dangerous
       {
         regex:
           /\b(buy|sell|selling|buying|deal|dealer)\b.{0,30}\b(drugs?|weed|cocaine|meth|heroin|xanax|pills?|mdma|lsd)\b/i,
@@ -656,18 +678,15 @@ export default function Home() {
           /\b(how to (make|build|create).{0,20}(bomb|weapon|explosive|poison))\b/i,
         msg: "That content isn't allowed here 🌸"
       },
-      // Hate / slurs (add more as needed)
       {
         regex: /\b(n[i1]gg[ae]r|f[a4]gg[o0]t|k[i1]ke|ch[i1]nk|sp[i1][ck])\b/i,
         msg: "Slurs and hate speech aren't welcome here 🌸"
       },
-      // Scam / spam
       {
         regex:
           /(follow me on|check out my|subscribe to|click this link|bit\.ly|tinyurl|free money|win \$|you've won)/i,
         msg: "Spam or promotional content isn't allowed here 🌸"
       },
-      // Self-harm promotion (not discussion — promotion)
       {
         regex:
           /(how to (kill yourself|commit suicide|end your life)|step[s]? to suicide)/i,
@@ -682,7 +701,7 @@ export default function Home() {
     }
     return null;
   };
-  // Create a new post - FIXED VERSION
+
   const createPost = async () => {
     if (!text.trim()) {
       showNotification("Write something first 🌸");
@@ -699,16 +718,13 @@ export default function Home() {
       );
       return;
     }
-    // ─── content filter ───────────────────────────────────────
     const flagged = containsBadContent(text.trim());
     if (flagged) {
       showNotification(flagged, "warn");
       return;
     }
-    // ──────────────────────────────────────────────────────────
     setPosting(true);
 
-    // ──────────────────────────────────────────────────────────
     const { error } = await supabase.from("posts").insert([
       {
         content: text.trim(),
@@ -727,7 +743,6 @@ export default function Home() {
     setPosting(false);
   };
 
-  // Handle user session
   const handleUserSession = async (authUser: any): Promise<string> => {
     setUser(authUser);
     userRef.current = authUser;
@@ -743,13 +758,12 @@ export default function Home() {
     if (!error) setDisplayName(newName);
     return newName;
   };
-  // Post interactions
+
   const handleLike = async (postId: number) => {
     if (!user) return;
 
     const alreadyLiked = likedPosts.has(postId);
 
-    // Optimistic update
     setLikedPosts((prev) => {
       const next = new Set(prev);
       alreadyLiked ? next.delete(postId) : next.add(postId);
@@ -771,7 +785,6 @@ export default function Home() {
         .eq("post_id", postId)
         .eq("user_id", user.id);
       if (error) {
-        // Revert
         setLikedPosts((prev) => {
           const next = new Set(prev);
           next.add(postId);
@@ -791,7 +804,6 @@ export default function Home() {
           ignoreDuplicates: true
         });
       if (error) {
-        // Revert
         setLikedPosts((prev) => {
           const next = new Set(prev);
           next.delete(postId);
@@ -869,22 +881,21 @@ export default function Home() {
             user_id: post.anonymous_id,
             type: "reply",
             post_id: postId,
-            triggered_by: displayName
+            triggered_by: displayName,
+            // store the reply id so we can scroll to it
+            reply_id: data?.id ?? null
           }
         ]);
       }
-      // Update reply count
       setReplyCounts((prev) => {
         const next = new Map(prev);
         next.set(postId, (next.get(postId) || 0) + 1);
         return next;
       });
-      // Append to open replies if visible
       if (data) {
         setRepliesMap((prev) => {
           const next = new Map(prev);
           const existing = prev.get(postId) || [];
-          // Only add if not already present (prevents duplicate with realtime)
           if (!existing.find((r: any) => r.id === data.id)) {
             next.set(postId, [...existing, data]);
           }
@@ -894,6 +905,7 @@ export default function Home() {
     }
     setReplySubmitting(false);
   };
+
   const handleDeletePost = async (postId: number, anonymousId: string) => {
     if (user?.id !== anonymousId) {
       showNotification("You can only delete your own posts.");
@@ -929,6 +941,7 @@ export default function Home() {
       showNotification("Something went wrong. Try again.");
     }
   };
+
   const loadReplies = async (postId: number) => {
     setRepliesLoading((prev) => new Set(prev).add(postId));
     const { data, error } = await supabase
@@ -973,9 +986,63 @@ export default function Home() {
     setPostsToday(count || 0);
   };
 
+  // ─── FIX 2: Notification navigation — go to post AND open/scroll to reply ──
+  const handleNotifClick = async (n: any, closeMenus: () => void) => {
+    closeMenus();
+    setCurrentPage("feed");
+
+    // Small delay to let feed render
+    await new Promise((r) => setTimeout(r, 250));
+
+    const postEl = document.getElementById(`post-${n.post_id}`);
+    if (postEl) {
+      postEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      postEl.style.transition = "box-shadow 0.4s ease";
+      postEl.style.boxShadow = "0 0 0 2px rgba(232,121,160,0.7)";
+      setTimeout(() => {
+        postEl.style.boxShadow = "";
+      }, 2000);
+    }
+
+    // If it's a reply notification, open the reply thread and scroll to the reply
+    if (n.type === "reply") {
+      // Make sure replies are loaded for this post
+      setShowReplyId(n.post_id);
+      if (!repliesMap.has(n.post_id)) {
+        await loadReplies(n.post_id);
+      }
+
+      // If we have a specific reply_id, scroll to it after replies render
+      if (n.reply_id) {
+        setTimeout(() => {
+          const replyEl = document.getElementById(`reply-${n.reply_id}`);
+          if (replyEl) {
+            replyEl.scrollIntoView({ behavior: "smooth", block: "center" });
+            replyEl.style.transition = "background 0.4s ease";
+            replyEl.style.background = "rgba(232,121,160,0.22)";
+            setTimeout(() => {
+              replyEl.style.background = "";
+            }, 2000);
+          }
+        }, 400);
+      } else {
+        // No specific reply id — just scroll to the reply section
+        setTimeout(() => {
+          const replySection = document.getElementById(`replies-${n.post_id}`);
+          if (replySection) {
+            replySection.scrollIntoView({
+              behavior: "smooth",
+              block: "nearest"
+            });
+          }
+        }, 400);
+      }
+    }
+  };
+  // ─────────────────────────────────────────────────────────────────────────
+
   // Custom cursor effect
   useEffect(() => {
-    // Create cursor element
     const cursor = document.createElement("div");
     cursor.id = "sakura-cursor";
     cursor.innerHTML = `<svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1208,9 +1275,10 @@ export default function Home() {
       canvas.remove();
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("touchmove", handleTouchMove); // ← add this
+      window.removeEventListener("touchmove", handleTouchMove);
     };
   }, []);
+
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (openMenuId !== null) setOpenMenuId(null);
@@ -1218,7 +1286,7 @@ export default function Home() {
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
   }, [openMenuId]);
-  // Restore session on mount
+
   useEffect(() => {
     const init = async () => {
       const {
@@ -1229,7 +1297,6 @@ export default function Home() {
         await handleUserSession(session.user);
         await loadPosts(0, false, session.user.id);
         await loadPostsToday(session.user.id);
-        // if session exists:
         await loadNotifications(session.user.id);
       } else {
         const { data, error } = await supabase.auth.signInAnonymously();
@@ -1237,7 +1304,6 @@ export default function Home() {
           await handleUserSession(data.user);
           await loadPosts(0, false, data.user.id);
           await loadPostsToday(data.user.id);
-          // if signing in anonymously:
           await loadNotifications(data.user.id);
         }
       }
@@ -1256,8 +1322,6 @@ export default function Home() {
       }
     );
 
-    // Realtime: new posts appear instantly
-    // Realtime: new posts appear instantly
     const channel = supabase
       .channel("posts-feed")
       .on(
@@ -1281,7 +1345,7 @@ export default function Home() {
         { event: "INSERT", schema: "public", table: "likes" },
         (payload) => {
           const newLike = payload.new as any;
-          if (newLike.user_id === userRef.current?.id) return; // skip own action
+          if (newLike.user_id === userRef.current?.id) return;
           setLikesCount((prev) => {
             const next = new Map(prev);
             next.set(newLike.post_id, (next.get(newLike.post_id) || 0) + 1);
@@ -1294,7 +1358,7 @@ export default function Home() {
         { event: "DELETE", schema: "public", table: "likes" },
         (payload) => {
           const oldLike = payload.old as any;
-          if (oldLike.user_id === userRef.current?.id) return; // skip own action
+          if (oldLike.user_id === userRef.current?.id) return;
           setLikesCount((prev) => {
             const next = new Map(prev);
             next.set(
@@ -1320,7 +1384,6 @@ export default function Home() {
             const next = new Map(prev);
             if (next.has(postId)) {
               const existing = next.get(postId) || [];
-              // Only add if not already present (prevents duplicate with handleReply)
               if (!existing.find((r: any) => r.id === newReply.id)) {
                 next.set(postId, [...existing, newReply]);
               }
@@ -1367,7 +1430,6 @@ export default function Home() {
           fontFamily: "'Inter', sans-serif"
         }}
       >
-        {/* floating doodles */}
         <div
           style={{
             position: "absolute",
@@ -1379,7 +1441,6 @@ export default function Home() {
         >
           ✿
         </div>
-
         <div
           style={{
             position: "absolute",
@@ -1391,7 +1452,6 @@ export default function Home() {
         >
           ~
         </div>
-
         <div
           style={{
             position: "absolute",
@@ -1404,7 +1464,6 @@ export default function Home() {
           ❀
         </div>
 
-        {/* Title */}
         <h1
           style={{
             fontSize: "42px",
@@ -1428,7 +1487,6 @@ export default function Home() {
           />
         </h1>
 
-        {/* Paragraph 1 */}
         <p
           style={{
             fontSize: "18px",
@@ -1454,7 +1512,6 @@ export default function Home() {
           Like my feet were rooted to a place I did not choose.
         </p>
 
-        {/* emotional divider */}
         <div
           style={{
             textAlign: "center",
@@ -1468,7 +1525,6 @@ export default function Home() {
           · · ·
         </div>
 
-        {/* Paragraph 2 */}
         <p
           style={{
             fontSize: "18px",
@@ -1496,7 +1552,6 @@ export default function Home() {
           something anyone could hold?
         </p>
 
-        {/* single line impact */}
         <p
           style={{
             fontSize: "20px",
@@ -1510,31 +1565,17 @@ export default function Home() {
           one could fix it?
         </p>
 
-        {/* broken rhythm text */}
         <div style={{ marginBottom: "40px" }}>
-          <p
-            style={{
-              fontSize: "18px",
-              color: "#b8a9d6",
-              lineHeight: "2"
-            }}
-          >
+          <p style={{ fontSize: "18px", color: "#b8a9d6", lineHeight: "2" }}>
             Hundreds of questions swirling.
           </p>
           <p style={{ color: "#b8a9d6", margin: "6px 0" }}>No proper words.</p>
           <p style={{ color: "#b8a9d6", margin: "6px 0" }}>No proper place.</p>
-          <p
-            style={{
-              marginTop: "14px",
-              color: "#e879a0",
-              fontWeight: "500"
-            }}
-          >
+          <p style={{ marginTop: "14px", color: "#e879a0", fontWeight: "500" }}>
             That is when I thought of UnTale.
           </p>
         </div>
 
-        {/* Paragraph */}
         <p
           style={{
             fontSize: "18px",
@@ -1549,7 +1590,6 @@ export default function Home() {
           the wind takes us, with no say in the direction.
         </p>
 
-        {/* MAIN QUOTE (hero moment) */}
         <div
           style={{
             margin: "70px 0",
@@ -1567,9 +1607,8 @@ export default function Home() {
               opacity: 0.08
             }}
           >
-            “
+            "
           </div>
-
           <p
             style={{
               color: "#f5c6d6",
@@ -1586,7 +1625,6 @@ export default function Home() {
           </p>
         </div>
 
-        {/* closing paragraph */}
         <p
           style={{
             fontSize: "18px",
@@ -1601,7 +1639,6 @@ export default function Home() {
           the same for you.
         </p>
 
-        {/* feature card reimagined */}
         <div
           style={{
             textAlign: "center",
@@ -1610,15 +1647,7 @@ export default function Home() {
             borderBottom: "1px dashed rgba(255,255,255,0.1)"
           }}
         >
-          <div
-            style={{
-              fontSize: "36px",
-              marginBottom: "12px"
-            }}
-          >
-            🌸
-          </div>
-
+          <div style={{ fontSize: "36px", marginBottom: "12px" }}>🌸</div>
           <p
             style={{
               color: "#ffffff",
@@ -1630,7 +1659,6 @@ export default function Home() {
           >
             UnTale is an anonymous space where your words finally have a home.
           </p>
-
           <p
             style={{
               color: "#a393c8",
@@ -1648,14 +1676,13 @@ export default function Home() {
       </div>
     </div>
   );
+
   const renderHome = () => (
     <div style={styles.homePage}>
-      {/* Ambient orbs */}
       <div style={styles.orb1} />
       <div style={styles.orb2} />
       <div style={styles.orb3} />
 
-      {/* Hero */}
       <div style={styles.hero}>
         <div style={styles.heroEyebrow}>
           <span style={styles.eyebrowDot} />
@@ -1721,7 +1748,6 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Floating words */}
         <div style={styles.floatingWords}>
           {[
             "lost",
@@ -1748,7 +1774,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Quote strip */}
       <div style={styles.quoteStrip}>
         <div style={styles.quoteInner}>
           <span style={styles.quoteGlyph}>"</span>
@@ -1760,7 +1785,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Feature tiles */}
       <div style={styles.tilesGrid}>
         {[
           {
@@ -1808,7 +1832,6 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Bottom CTA */}
       <div style={styles.bottomCta}>
         <p style={styles.ctaText}>Your story deserves to be heard.</p>
         <button
@@ -1832,7 +1855,7 @@ export default function Home() {
       </div>
     </div>
   );
-  // Feed View
+
   const renderFeed = () => (
     <div
       style={{
@@ -1968,7 +1991,6 @@ export default function Home() {
                   💬 {replyCounts.get(p.id) ?? 0}
                 </button>
 
-                {/* Floating Action Tray */}
                 <div style={{ position: "relative", marginLeft: "auto" }}>
                   <button
                     onClick={() =>
@@ -2011,7 +2033,6 @@ export default function Home() {
                     </span>
                   </button>
 
-                  {/* Tray */}
                   {openMenuId === p.id && (
                     <div
                       style={{
@@ -2027,7 +2048,6 @@ export default function Home() {
                         animation: "trayOpen 0.18s cubic-bezier(.4,0,.2,1) both"
                       }}
                     >
-                      {/* Caret */}
                       <div
                         style={{
                           position: "absolute",
@@ -2041,7 +2061,6 @@ export default function Home() {
                           transform: "rotate(45deg)"
                         }}
                       />
-
                       <div
                         style={{
                           fontSize: "10px",
@@ -2055,7 +2074,6 @@ export default function Home() {
                       >
                         Post options
                       </div>
-
                       <div
                         style={{
                           height: "0.5px",
@@ -2063,8 +2081,6 @@ export default function Home() {
                           margin: "4px 6px"
                         }}
                       />
-
-                      {/* Report */}
                       <button
                         onClick={() => {
                           handleReport(p.id);
@@ -2111,7 +2127,6 @@ export default function Home() {
                           : "Report post"}
                       </button>
 
-                      {/* Delete — only for own posts */}
                       {p.anonymous_id === user?.id && (
                         <button
                           onClick={() => {
@@ -2153,8 +2168,10 @@ export default function Home() {
                   )}
                 </div>
               </div>
+
+              {/* ─── FIX 2b: reply section gets its own id for scroll targeting ─── */}
               {showReplyId === p.id && (
-                <div style={styles.replyBox}>
+                <div id={`replies-${p.id}`} style={styles.replyBox}>
                   {repliesLoading.has(p.id) ? (
                     <div
                       style={{
@@ -2183,12 +2200,15 @@ export default function Home() {
                           ])
                         ).values()
                       ).map((r: any) => (
+                        // Each reply gets its own id for direct scroll targeting
                         <div
                           key={r.id}
+                          id={`reply-${r.id}`}
                           style={{
                             background: "rgba(232,121,160,0.06)",
                             borderRadius: 12,
-                            padding: "10px 14px"
+                            padding: "10px 14px",
+                            transition: "background 0.4s ease"
                           }}
                         >
                           <div
@@ -2334,7 +2354,6 @@ export default function Home() {
           maxHeight: isMobile ? "none" : "calc(100vh - 104px)"
         }}
       >
-        {/* Smart Search Card */}
         <div style={styles.sideCard}>
           <div style={styles.sideCardTitle}>🔍 Search Posts</div>
           <div style={{ marginTop: "12px", position: "relative" }}>
@@ -2398,7 +2417,7 @@ export default function Home() {
             </div>
           )}
         </div>
-        {/* Your identity card */}
+
         <div style={styles.sideCard}>
           <div style={styles.sideCardTitle}>Your Identity</div>
           <div
@@ -2430,7 +2449,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Top posts this week */}
         <div style={styles.sideCard}>
           <div style={styles.sideCardTitle}>🔥 Most Loved</div>
           <div
@@ -2514,7 +2532,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Community vibe */}
         <div style={styles.sideCard}>
           <div style={styles.sideCardTitle}>🌸 Community</div>
           <div
@@ -2568,6 +2585,7 @@ export default function Home() {
       </div>
     </div>
   );
+
   const renderFeedback = () => (
     <div style={{ maxWidth: "580px", margin: "0 auto", padding: "40px 24px" }}>
       <h1
@@ -2609,7 +2627,70 @@ export default function Home() {
     </div>
   );
 
-  // Main render with navigation
+  // Notification list renderer (shared between desktop dropdown and mobile panel)
+  const renderNotifList = (closeMenus: () => void) =>
+    notifs.length === 0 ? (
+      <div
+        style={{
+          fontSize: "13px",
+          color: "#5b4d72",
+          textAlign: "center",
+          padding: "20px 0"
+        }}
+      >
+        No notifications yet 🌸
+      </div>
+    ) : (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "6px",
+          maxHeight: "320px",
+          overflowY: "auto"
+        }}
+      >
+        {notifs.map((n) => (
+          <div
+            key={n.id}
+            onClick={() => handleNotifClick(n, closeMenus)}
+            style={{
+              padding: "10px 12px",
+              borderRadius: "10px",
+              background: n.read ? "transparent" : "rgba(232,121,160,0.08)",
+              border: "1px solid rgba(232,121,160,0.08)",
+              fontSize: "13px",
+              color: "#d8cff0",
+              lineHeight: 1.5,
+              cursor: "pointer",
+              transition: "background 0.15s"
+            }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = "rgba(232,121,160,0.15)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = n.read
+                ? "transparent"
+                : "rgba(232,121,160,0.08)")
+            }
+          >
+            {n.type === "like"
+              ? `❤️ ${n.triggered_by} liked your post`
+              : `💬 ${n.triggered_by} replied to your post`}
+            <div
+              style={{
+                fontSize: "11px",
+                color: "#5b4d72",
+                marginTop: "3px"
+              }}
+            >
+              {timeAgo(n.created_at)}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+
   return (
     <div style={styles.mainApp}>
       {/* Navbar */}
@@ -2619,46 +2700,24 @@ export default function Home() {
             Un<span style={{ fontStyle: "italic" }}>Tale</span>
           </span>
         </div>
+
+        {/* Desktop nav */}
         {!isMobile && (
           <div style={styles.navLinks}>
-            <button
-              style={{
-                ...styles.navLink,
-                ...(currentPage === "home" ? styles.navLinkActive : {})
-              }}
-              onClick={() => setCurrentPage("home")}
-            >
-              Home
-            </button>
-            <button
-              style={{
-                ...styles.navLink,
-                ...(currentPage === "feed" ? styles.navLinkActive : {})
-              }}
-              onClick={() => setCurrentPage("feed")}
-            >
-              Feed
-            </button>
-            <button
-              style={{
-                ...styles.navLink,
-                ...(currentPage === "about" ? styles.navLinkActive : {})
-              }}
-              onClick={() => setCurrentPage("about")}
-            >
-              About
-            </button>
-            <button
-              style={{
-                ...styles.navLink,
-                ...(currentPage === "feedback" ? styles.navLinkActive : {})
-              }}
-              onClick={() => setCurrentPage("feedback")}
-            >
-              Feedback
-            </button>
+            {(["home", "feed", "about", "feedback"] as const).map((pg) => (
+              <button
+                key={pg}
+                style={{
+                  ...styles.navLink,
+                  ...(currentPage === pg ? styles.navLinkActive : {})
+                }}
+                onClick={() => setCurrentPage(pg)}
+              >
+                {pg.charAt(0).toUpperCase() + pg.slice(1)}
+              </button>
+            ))}
             <div style={styles.userSection}>
-              {/* Bell */}
+              {/* Bell — desktop */}
               <div style={{ position: "relative" }}>
                 <button
                   onClick={() => {
@@ -2729,90 +2788,7 @@ export default function Home() {
                     >
                       Notifications
                     </div>
-                    {notifs.length === 0 ? (
-                      <div
-                        style={{
-                          fontSize: "13px",
-                          color: "#5b4d72",
-                          textAlign: "center",
-                          padding: "20px 0"
-                        }}
-                      >
-                        No notifications yet 🌸
-                      </div>
-                    ) : (
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "6px",
-                          maxHeight: "320px",
-                          overflowY: "auto"
-                        }}
-                      >
-                        {notifs.map((n) => (
-                          <div
-                            key={n.id}
-                            onClick={() => {
-                              setShowNotifDropdown(false);
-                              setCurrentPage("feed");
-                              setTimeout(() => {
-                                const el = document.getElementById(
-                                  `post-${n.post_id}`
-                                );
-                                if (el) {
-                                  el.scrollIntoView({
-                                    behavior: "smooth",
-                                    block: "center"
-                                  });
-                                  el.style.transition = "box-shadow 0.4s ease";
-                                  el.style.boxShadow =
-                                    "0 0 0 2px rgba(232,121,160,0.7)";
-                                  setTimeout(() => {
-                                    el.style.boxShadow = "";
-                                  }, 2000);
-                                }
-                              }, 200);
-                            }}
-                            style={{
-                              padding: "10px 12px",
-                              borderRadius: "10px",
-                              background: n.read
-                                ? "transparent"
-                                : "rgba(232,121,160,0.08)",
-                              border: "1px solid rgba(232,121,160,0.08)",
-                              fontSize: "13px",
-                              color: "#d8cff0",
-                              lineHeight: 1.5,
-                              cursor: "pointer",
-                              transition: "background 0.15s"
-                            }}
-                            onMouseEnter={(e) =>
-                              (e.currentTarget.style.background =
-                                "rgba(232,121,160,0.15)")
-                            }
-                            onMouseLeave={(e) =>
-                              (e.currentTarget.style.background = n.read
-                                ? "transparent"
-                                : "rgba(232,121,160,0.08)")
-                            }
-                          >
-                            {n.type === "like"
-                              ? `❤️ ${n.triggered_by} liked your post`
-                              : `💬 ${n.triggered_by} replied to your post`}
-                            <div
-                              style={{
-                                fontSize: "11px",
-                                color: "#5b4d72",
-                                marginTop: "3px"
-                              }}
-                            >
-                              {timeAgo(n.created_at)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    {renderNotifList(() => setShowNotifDropdown(false))}
                   </div>
                 )}
               </div>
@@ -2820,226 +2796,83 @@ export default function Home() {
             </div>
           </div>
         )}
-        <button
-          style={{ ...styles.hamburger, display: isMobile ? "flex" : "none" }}
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          <span
+
+        {/* ─── FIX 3: Hamburger with notification badge ─────────────────── */}
+        {isMobile && (
+          <button
+            ref={hamburgerRef}
             style={{
-              display: "block",
-              width: "22px",
-              height: "2px",
-              background: "#e879a0",
-              borderRadius: "2px"
+              ...styles.hamburger,
+              display: "flex",
+              position: "relative"
             }}
-          />
-          <span
-            style={{
-              display: "block",
-              width: "22px",
-              height: "2px",
-              background: "#e879a0",
-              borderRadius: "2px"
+            onClick={() => {
+              const opening = !mobileMenuOpen;
+              setMobileMenuOpen(opening);
+              if (opening) {
+                markAllRead();
+              } else {
+                setShowNotifDropdown(false);
+              }
             }}
-          />
-          <span
-            style={{
-              display: "block",
-              width: "22px",
-              height: "2px",
-              background: "#e879a0",
-              borderRadius: "2px"
-            }}
-          />
-        </button>
+          >
+            <span
+              style={{
+                display: "block",
+                width: "22px",
+                height: "2px",
+                background: "#e879a0",
+                borderRadius: "2px"
+              }}
+            />
+            <span
+              style={{
+                display: "block",
+                width: "22px",
+                height: "2px",
+                background: "#e879a0",
+                borderRadius: "2px"
+              }}
+            />
+            <span
+              style={{
+                display: "block",
+                width: "22px",
+                height: "2px",
+                background: "#e879a0",
+                borderRadius: "2px"
+              }}
+            />
+            {/* Badge on hamburger */}
+            {unreadCount > 0 && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: "-6px",
+                  right: "-8px",
+                  background: "linear-gradient(135deg, #be185d, #e879a0)",
+                  color: "#fff",
+                  fontSize: "9px",
+                  fontWeight: 700,
+                  borderRadius: "50px",
+                  padding: "1px 5px",
+                  lineHeight: "14px",
+                  minWidth: "14px",
+                  textAlign: "center",
+                  pointerEvents: "none"
+                }}
+              >
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </button>
+        )}
+        {/* ─────────────────────────────────────────────────────────────── */}
       </div>
 
-      {/* Mobile Menu */}
+      {/* ─── FIX 1b: Mobile Menu with ref for outside-click detection ──── */}
       {mobileMenuOpen && (
-        <div style={styles.mobileMenu}>
-          {mobileMenuOpen && (
-            <div style={styles.mobileMenu}>
-              <button
-                style={styles.mobileLink}
-                onClick={() => {
-                  setCurrentPage("home");
-                  setMobileMenuOpen(false);
-                }}
-              >
-                Home
-              </button>
-              <button
-                style={styles.mobileLink}
-                onClick={() => {
-                  setCurrentPage("feed");
-                  setMobileMenuOpen(false);
-                }}
-              >
-                Feed
-              </button>
-              <button
-                style={styles.mobileLink}
-                onClick={() => {
-                  setCurrentPage("about");
-                  setMobileMenuOpen(false);
-                }}
-              >
-                About
-              </button>
-              <button
-                style={styles.mobileLink}
-                onClick={() => {
-                  setCurrentPage("feedback");
-                  setMobileMenuOpen(false);
-                }}
-              >
-                Feedback
-              </button>
-
-              {/* Divider */}
-              <div
-                style={{
-                  height: "1px",
-                  background: "rgba(232,121,160,0.15)",
-                  margin: "8px 0"
-                }}
-              />
-
-              {/* Notifications */}
-              <button
-                style={{
-                  ...styles.mobileLink,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  color: "#e879a0"
-                }}
-                onClick={() => {
-                  setShowNotifDropdown(!showNotifDropdown);
-                  if (!showNotifDropdown) markAllRead();
-                }}
-              >
-                🌸 Notifications
-                {unreadCount > 0 && (
-                  <span
-                    style={{
-                      background: "linear-gradient(135deg, #be185d, #e879a0)",
-                      color: "#fff",
-                      fontSize: "10px",
-                      fontWeight: 700,
-                      borderRadius: "50px",
-                      padding: "1px 8px"
-                    }}
-                  >
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Notification list inline */}
-              {showNotifDropdown && (
-                <div
-                  style={{
-                    margin: "4px 8px",
-                    background: "#1e1a32",
-                    border: "1px solid rgba(232,121,160,0.18)",
-                    borderRadius: "14px",
-                    padding: "10px"
-                  }}
-                >
-                  {notifs.length === 0 ? (
-                    <div
-                      style={{
-                        fontSize: "13px",
-                        color: "#5b4d72",
-                        textAlign: "center",
-                        padding: "14px 0"
-                      }}
-                    >
-                      No notifications yet 🌸
-                    </div>
-                  ) : (
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "6px",
-                        maxHeight: "240px",
-                        overflowY: "auto"
-                      }}
-                    >
-                      {notifs.map((n) => (
-                        <div
-                          key={n.id}
-                          onClick={() => {
-                            setShowNotifDropdown(false);
-                            setMobileMenuOpen(false);
-                            setCurrentPage("feed");
-                            setTimeout(() => {
-                              const el = document.getElementById(
-                                `post-${n.post_id}`
-                              );
-                              if (el) {
-                                el.scrollIntoView({
-                                  behavior: "smooth",
-                                  block: "center"
-                                });
-                                el.style.transition = "box-shadow 0.4s ease";
-                                el.style.boxShadow =
-                                  "0 0 0 2px rgba(232,121,160,0.7)";
-                                setTimeout(() => {
-                                  el.style.boxShadow = "";
-                                }, 2000);
-                              }
-                            }, 200);
-                          }}
-                          style={{
-                            padding: "10px 12px",
-                            borderRadius: "10px",
-                            background: n.read
-                              ? "transparent"
-                              : "rgba(232,121,160,0.08)",
-                            border: "1px solid rgba(232,121,160,0.08)",
-                            fontSize: "13px",
-                            color: "#d8cff0",
-                            lineHeight: 1.5,
-                            cursor: "pointer"
-                          }}
-                        >
-                          {n.type === "like"
-                            ? `❤️ ${n.triggered_by} liked your post`
-                            : `💬 ${n.triggered_by} replied to your post`}
-                          <div
-                            style={{
-                              fontSize: "11px",
-                              color: "#5b4d72",
-                              marginTop: "3px"
-                            }}
-                          >
-                            {timeAgo(n.created_at)}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Username */}
-              <div
-                style={{
-                  padding: "8px 16px",
-                  fontSize: "12px",
-                  color: "#5b4d72"
-                }}
-              >
-                Posting as{" "}
-                <span style={{ color: "#e879a0", fontWeight: 600 }}>
-                  {displayName}
-                </span>
-              </div>
-            </div>
-          )}
+        <div ref={mobileMenuRef} style={styles.mobileMenu}>
           <button
             style={styles.mobileLink}
             onClick={() => {
@@ -3076,8 +2909,88 @@ export default function Home() {
           >
             Feedback
           </button>
+
+          <div
+            style={{
+              height: "1px",
+              background: "rgba(232,121,160,0.15)",
+              margin: "8px 0"
+            }}
+          />
+
+          {/* Notifications toggle */}
+          <button
+            style={{
+              ...styles.mobileLink,
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              color: "#e879a0"
+            }}
+            onClick={() => setShowNotifDropdown((v) => !v)}
+          >
+            🌸 Notifications
+            {unreadCount > 0 && (
+              <span
+                style={{
+                  background: "linear-gradient(135deg, #be185d, #e879a0)",
+                  color: "#fff",
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  borderRadius: "50px",
+                  padding: "1px 8px"
+                }}
+              >
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </button>
+
+          {/* Inline notification list */}
+          {showNotifDropdown && (
+            <div
+              style={{
+                margin: "4px 8px",
+                background: "#1e1a32",
+                border: "1px solid rgba(232,121,160,0.18)",
+                borderRadius: "14px",
+                padding: "10px"
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  color: "#a89bc2",
+                  marginBottom: "8px",
+                  padding: "0 4px"
+                }}
+              >
+                Notifications
+              </div>
+              {renderNotifList(() => {
+                setShowNotifDropdown(false);
+                setMobileMenuOpen(false);
+              })}
+            </div>
+          )}
+
+          {/* Username */}
+          <div
+            style={{
+              padding: "8px 16px",
+              fontSize: "12px",
+              color: "#5b4d72"
+            }}
+          >
+            Posting as{" "}
+            <span style={{ color: "#e879a0", fontWeight: 600 }}>
+              {displayName}
+            </span>
+          </div>
         </div>
       )}
+      {/* ─────────────────────────────────────────────────────────────────── */}
 
       {/* Page Content */}
       {currentPage === "home" && renderHome()}
@@ -3091,7 +3004,7 @@ export default function Home() {
       {currentPage === "about" && renderAbout()}
       {currentPage === "feedback" && renderFeedback()}
 
-      {/* Notification */}
+      {/* Toast notification */}
       {notification && (
         <div
           style={{
@@ -3126,8 +3039,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: "50%",
     animation: "spin 0.8s linear infinite"
   },
-
-  // Auth page
   authPage: {
     minHeight: "100vh",
     background:
@@ -3164,11 +3075,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "14px",
     margin: "0 0 8px"
   },
-  tabRow: {
-    display: "flex",
-    gap: "8px",
-    marginBottom: "4px"
-  },
+  tabRow: { display: "flex", gap: "8px", marginBottom: "4px" },
   tab: {
     flex: 1,
     padding: "10px",
@@ -3226,8 +3133,6 @@ const styles: Record<string, React.CSSProperties> = {
     margin: "4px 0 0",
     lineHeight: "1.5"
   },
-
-  // Main app
   mainApp: {
     background:
       "linear-gradient(160deg, #0d0b1e 0%, #16103a 40%, #1a0e32 70%, #0c0820 100%)",
@@ -3257,11 +3162,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#e879a0",
     letterSpacing: "-0.5px"
   },
-  navLinks: {
-    display: "flex",
-    alignItems: "center",
-    gap: "6px"
-  },
+  navLinks: { display: "flex", alignItems: "center", gap: "6px" },
   navLink: {
     padding: "8px 16px",
     borderRadius: "50px",
@@ -3279,30 +3180,13 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#e879a0",
     fontWeight: "600"
   },
-  navPremium: {
-    background: "linear-gradient(135deg, #d97706, #f5c842)",
-    color: "#fff !important"
-  },
   userSection: {
     display: "flex",
     alignItems: "center",
     gap: "10px",
     marginLeft: "16px"
   },
-  userAvatar: {
-    width: "34px",
-    height: "34px",
-    borderRadius: "50%",
-    background: "linear-gradient(135deg, #be185d, #e879a0)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "16px"
-  },
-  userName: {
-    fontSize: "13px",
-    color: "#a89bc2"
-  },
+  userName: { fontSize: "13px", color: "#a89bc2" },
   logoutButton: {
     padding: "6px 14px",
     background: "transparent",
@@ -3314,13 +3198,13 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: "'DM Sans', sans-serif"
   },
   hamburger: {
-    display: "none",
     flexDirection: "column",
     gap: "5px",
     cursor: "pointer",
     background: "none",
     border: "none",
-    padding: "4px"
+    padding: "4px",
+    position: "relative"
   },
   mobileMenu: {
     position: "fixed",
@@ -3348,128 +3232,7 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: "left",
     fontFamily: "'DM Sans', sans-serif"
   },
-  pageContent: {
-    maxWidth: "1100px",
-    margin: "0 auto",
-    padding: "40px 24px"
-  },
-
-  // Hero section
-  hero: {
-    textAlign: "center",
-    padding: "60px 24px 40px"
-  },
-  heroLogo: {
-    fontSize: "64px",
-    marginBottom: "24px"
-  },
-  heroTitle: {
-    fontFamily: "'Playfair Display', serif",
-    fontSize: "clamp(38px, 6vw, 68px)",
-    fontWeight: "700",
-    color: "#f5eeff",
-    lineHeight: "1.15",
-    marginBottom: "20px"
-  },
-  heroSubtitle: {
-    fontSize: "18px",
-    color: "#a89bc2",
-    maxWidth: "520px",
-    margin: "0 auto 36px",
-    lineHeight: "1.7",
-    fontWeight: "300"
-  },
-  heroButtons: {
-    display: "flex",
-    gap: "14px",
-    justifyContent: "center",
-    flexWrap: "wrap"
-  },
-  btnPrimary: {
-    background: "linear-gradient(135deg, #be185d, #e879a0)",
-    color: "#fff",
-    border: "none",
-    borderRadius: "50px",
-    padding: "12px 28px",
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: "15px",
-    fontWeight: "600",
-    cursor: "pointer",
-    boxShadow: "0 4px 18px rgba(190,24,93,0.38)",
-    transition: "transform 0.25s ease, box-shadow 0.25s ease"
-  },
-  btnGhost: {
-    background: "transparent",
-    color: "#c084c8",
-    border: "1.5px solid rgba(192,132,200,0.35)",
-    borderRadius: "50px",
-    padding: "11px 26px",
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: "15px",
-    fontWeight: "500",
-    cursor: "pointer",
-    transition:
-      "transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease"
-  },
-  heroStats: {
-    display: "flex",
-    justifyContent: "center",
-    gap: "48px",
-    marginTop: "60px",
-    flexWrap: "wrap"
-  },
-  stat: {
-    textAlign: "center"
-  },
-  statNum: {
-    fontFamily: "'Playfair Display', serif",
-    fontSize: "32px",
-    fontWeight: "700",
-    color: "#e879a0"
-  },
-  statLabel: {
-    fontSize: "13px",
-    color: "#7c6a9a",
-    marginTop: "2px"
-  },
-  featuresGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-    gap: "20px",
-    padding: "0 24px 60px",
-    maxWidth: "900px",
-    margin: "0 auto"
-  },
-  featureCard: {
-    background: "rgba(16, 10, 40, 0.68)",
-    backdropFilter: "blur(16px)",
-    border: "1px solid rgba(232,121,160,0.18)",
-    borderRadius: "20px",
-    padding: "28px",
-    textAlign: "center"
-  },
-  featureIcon: {
-    fontSize: "34px",
-    marginBottom: "14px",
-    display: "inline-block"
-  },
-  featureTitle: {
-    fontSize: "17px",
-    fontWeight: "600",
-    marginBottom: "8px",
-    color: "#ede8f8"
-  },
-  featureDesc: {
-    fontSize: "14px",
-    color: "#7c6a9a",
-    lineHeight: "1.65"
-  },
-
-  // Home page enhanced
-  homePage: {
-    position: "relative" as const,
-    overflow: "hidden"
-  },
+  homePage: { position: "relative" as const, overflow: "hidden" },
   orb1: {
     position: "absolute" as const,
     top: "-120px",
@@ -3529,6 +3292,55 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#7c6a9a",
     fontWeight: "500"
   },
+  hero: { textAlign: "center", padding: "60px 24px 40px" },
+  heroTitle: {
+    fontFamily: "'Playfair Display', serif",
+    fontSize: "clamp(38px, 6vw, 68px)",
+    fontWeight: "700",
+    color: "#f5eeff",
+    lineHeight: "1.15",
+    marginBottom: "20px"
+  },
+  heroSubtitle: {
+    fontSize: "18px",
+    color: "#a89bc2",
+    maxWidth: "520px",
+    margin: "0 auto 36px",
+    lineHeight: "1.7",
+    fontWeight: "300"
+  },
+  heroButtons: {
+    display: "flex",
+    gap: "14px",
+    justifyContent: "center",
+    flexWrap: "wrap"
+  },
+  btnPrimary: {
+    background: "linear-gradient(135deg, #be185d, #e879a0)",
+    color: "#fff",
+    border: "none",
+    borderRadius: "50px",
+    padding: "12px 28px",
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: "15px",
+    fontWeight: "600",
+    cursor: "pointer",
+    boxShadow: "0 4px 18px rgba(190,24,93,0.38)",
+    transition: "transform 0.25s ease, box-shadow 0.25s ease"
+  },
+  btnGhost: {
+    background: "transparent",
+    color: "#c084c8",
+    border: "1.5px solid rgba(192,132,200,0.35)",
+    borderRadius: "50px",
+    padding: "11px 26px",
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: "15px",
+    fontWeight: "500",
+    cursor: "pointer",
+    transition:
+      "transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease"
+  },
   titleLine: {
     display: "inline-block",
     animation: "fadeSlideUp 0.8s ease both"
@@ -3554,11 +3366,7 @@ const styles: Record<string, React.CSSProperties> = {
     whiteSpace: "nowrap" as const,
     bottom: 0
   },
-  quoteStrip: {
-    margin: "0 auto 60px",
-    maxWidth: "700px",
-    padding: "0 24px"
-  },
+  quoteStrip: { margin: "0 auto 60px", maxWidth: "700px", padding: "0 24px" },
   quoteInner: {
     borderLeft: "2px solid rgba(232,121,160,0.35)",
     paddingLeft: "28px",
@@ -3601,11 +3409,7 @@ const styles: Record<string, React.CSSProperties> = {
     animation: "fadeSlideUp 0.8s ease both",
     cursor: "default"
   },
-  tileIcon: {
-    fontSize: "36px",
-    marginBottom: "16px",
-    display: "block"
-  },
+  tileIcon: { fontSize: "36px", marginBottom: "16px", display: "block" },
   tileTitle: {
     fontSize: "16px",
     fontWeight: "700",
@@ -3644,8 +3448,6 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: "0 6px 28px rgba(190,24,93,0.4)",
     transition: "transform 0.2s, box-shadow 0.2s"
   },
-
-  // Compose box
   composeBox: {
     background: "rgba(16, 10, 40, 0.68)",
     backdropFilter: "blur(16px)",
@@ -3654,11 +3456,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "20px",
     marginBottom: "32px"
   },
-  composeMeta: {
-    fontSize: "12px",
-    color: "#7c6a9a",
-    marginBottom: "10px"
-  },
+  composeMeta: { fontSize: "12px", color: "#7c6a9a", marginBottom: "10px" },
   textarea: {
     width: "100%",
     minHeight: "100px",
@@ -3674,13 +3472,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: "'DM Sans', sans-serif",
     lineHeight: "1.65"
   },
-
-  // Feed
-  feed: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "16px"
-  },
+  feed: { display: "flex", flexDirection: "column", gap: "16px" },
   postCard: {
     background: "rgba(16, 10, 40, 0.68)",
     backdropFilter: "blur(16px)",
@@ -3704,29 +3496,16 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: "center",
     fontSize: "16px"
   },
-  postAuthor: {
-    fontWeight: "600",
-    color: "#a89bc2",
-    fontSize: "13px"
-  },
-  postTime: {
-    fontSize: "11px",
-    color: "#5b4d72",
-    marginLeft: "auto"
-  },
+  postAuthor: { fontWeight: "600", color: "#a89bc2", fontSize: "13px" },
+  postTime: { fontSize: "11px", color: "#5b4d72", marginLeft: "auto" },
   postContent: {
     fontSize: "15px",
     lineHeight: "1.75",
     color: "#d8cff0",
     marginBottom: "14px"
   },
-  postTags: {
-    marginBottom: "14px"
-  },
-  postActions: {
-    display: "flex",
-    gap: "8px"
-  },
+  postTags: { marginBottom: "14px" },
+  postActions: { display: "flex", gap: "8px" },
   actionBtn: {
     background: "rgba(232,121,160,0.08)",
     border: "1px solid rgba(232,121,160,0.18)",
@@ -3762,7 +3541,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "8px 20px",
     fontSize: "13px",
     cursor: "pointer",
-    color: "#c084c8",
+    color: "#c084fc",
     fontFamily: "'DM Sans', sans-serif"
   },
   replyBtn: {
@@ -3775,298 +3554,6 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: "pointer",
     fontFamily: "'DM Sans', sans-serif"
   },
-
-  // Chat styles
-  chatContainer: {
-    maxWidth: "680px",
-    margin: "0 auto"
-  },
-  sectionTitle: {
-    fontFamily: "'Playfair Display', serif",
-    fontSize: "28px",
-    fontWeight: "700",
-    color: "#f5eeff",
-    marginBottom: "6px",
-    textAlign: "center"
-  },
-  sectionSub: {
-    fontSize: "14px",
-    color: "#7c6a9a",
-    marginBottom: "28px",
-    textAlign: "center"
-  },
-  moodGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(4, 1fr)",
-    gap: "12px",
-    marginBottom: "28px"
-  },
-  moodBtn: {
-    padding: "18px 10px",
-    borderRadius: "16px",
-    border: "2px solid",
-    background: "rgba(16,10,40,0.7)",
-    backdropFilter: "blur(10px)",
-    cursor: "pointer",
-    transition: "all 0.22s",
-    textAlign: "center",
-    fontFamily: "'DM Sans', sans-serif"
-  },
-  moodEmoji: {
-    fontSize: "28px",
-    display: "block",
-    marginBottom: "6px"
-  },
-  moodLabel: {
-    fontSize: "12px",
-    fontWeight: "600",
-    color: "#a89bc2"
-  },
-  moodDesc: {
-    fontSize: "11px",
-    color: "#5b4d72",
-    marginTop: "3px"
-  },
-  moodPreview: {
-    background: "rgba(16, 10, 40, 0.68)",
-    backdropFilter: "blur(16px)",
-    border: "1px solid rgba(232,121,160,0.18)",
-    borderRadius: "20px",
-    padding: "14px 20px",
-    marginBottom: 20,
-    display: "flex",
-    alignItems: "center"
-  },
-  chatStartBtn: {
-    background: "linear-gradient(135deg, #be185d, #e879a0)",
-    color: "#fff",
-    border: "none",
-    borderRadius: "50px",
-    padding: "14px",
-    fontSize: "16px",
-    fontWeight: "700",
-    cursor: "pointer",
-    width: "100%",
-    fontFamily: "'DM Sans', sans-serif"
-  },
-  chatSearching: {
-    textAlign: "center",
-    paddingTop: 60
-  },
-  loadingDots: {
-    display: "flex",
-    gap: "4px",
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  chatBox: {
-    borderRadius: "20px",
-    overflow: "hidden",
-    border: "1px solid rgba(232,121,160,0.18)",
-    background: "rgba(12,8,30,0.85)",
-    backdropFilter: "blur(14px)"
-  },
-  chatHeader: {
-    background: "rgba(190,24,93,0.07)",
-    padding: "14px 20px",
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    borderBottom: "1px solid rgba(232,121,160,0.18)"
-  },
-  chatStatusDot: {
-    width: "9px",
-    height: "9px",
-    borderRadius: "50%",
-    background: "#34d399",
-    flexShrink: 0
-  },
-  chatMoodPill: {
-    fontSize: "12px",
-    background: "rgba(232,121,160,0.16)",
-    color: "#c084c8",
-    padding: "3px 10px",
-    borderRadius: "50px",
-    fontWeight: "600"
-  },
-  chatMessages: {
-    height: "340px",
-    overflowY: "auto",
-    padding: "20px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "12px"
-  },
-  msg: {
-    maxWidth: "75%"
-  },
-  msgBubble: {
-    padding: "10px 16px",
-    borderRadius: "18px",
-    fontSize: "14px",
-    lineHeight: "1.55"
-  },
-  msgTime: {
-    fontSize: "10px",
-    color: "#5b4d72",
-    marginTop: "3px",
-    padding: "0 4px"
-  },
-  chatSystem: {
-    textAlign: "center",
-    fontSize: "12px",
-    color: "#5b4d72",
-    padding: "6px 16px",
-    background: "rgba(232,121,160,0.07)",
-    borderRadius: "50px",
-    alignSelf: "center"
-  },
-  chatInputArea: {
-    padding: "16px",
-    borderTop: "1px solid rgba(232,121,160,0.18)"
-  },
-  chatInputRow: {
-    display: "flex",
-    gap: "10px",
-    alignItems: "center"
-  },
-  chatInput: {
-    flex: 1,
-    padding: "12px 18px",
-    borderRadius: "50px",
-    border: "1.5px solid rgba(232,121,160,0.18)",
-    background: "rgba(16,10,40,0.7)",
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: "14px",
-    color: "#ede8f8",
-    outline: "none"
-  },
-  sendBtn: {
-    background: "linear-gradient(135deg, #be185d, #e879a0)",
-    color: "#fff",
-    border: "none",
-    borderRadius: "50px",
-    padding: "12px 20px",
-    cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif"
-  },
-  chatActions: {
-    display: "flex",
-    gap: "8px",
-    marginTop: "12px"
-  },
-  chatActionBtn: {
-    background: "rgba(232,121,160,0.08)",
-    border: "1px solid rgba(232,121,160,0.18)",
-    borderRadius: "50px",
-    padding: "7px 16px",
-    fontSize: "13px",
-    cursor: "pointer",
-    color: "#a89bc2",
-    fontFamily: "'DM Sans', sans-serif"
-  },
-
-  // Premium styles
-  premiumContainer: {
-    maxWidth: "1100px",
-    margin: "0 auto"
-  },
-  premiumHero: {
-    textAlign: "center",
-    padding: "50px 24px 32px"
-  },
-  premiumBadge: {
-    display: "inline-block",
-    background: "linear-gradient(135deg, #d97706, #f5c842)",
-    color: "#fff",
-    fontSize: "12px",
-    fontWeight: "700",
-    letterSpacing: "1.5px",
-    textTransform: "uppercase",
-    padding: "6px 18px",
-    borderRadius: "50px",
-    marginBottom: "20px"
-  },
-  premiumTitle: {
-    fontFamily: "'Playfair Display', serif",
-    fontSize: "clamp(30px, 5vw, 50px)",
-    color: "#f5eeff",
-    marginBottom: "14px"
-  },
-  premiumSub: {
-    color: "#7c6a9a",
-    fontSize: "16px",
-    maxWidth: "420px",
-    margin: "0 auto",
-    lineHeight: "1.7"
-  },
-  benefitsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-    gap: "18px",
-    margin: "32px 0"
-  },
-  benefitCard: {
-    background: "rgba(16, 10, 40, 0.68)",
-    backdropFilter: "blur(16px)",
-    border: "1px solid rgba(232,121,160,0.18)",
-    borderRadius: "20px",
-    padding: "28px 22px",
-    textAlign: "center"
-  },
-  benefitIcon: {
-    fontSize: "40px",
-    marginBottom: "14px",
-    display: "inline-block"
-  },
-  benefitTitle: {
-    fontSize: "16px",
-    fontWeight: "700",
-    marginBottom: "8px",
-    color: "#ede8f8"
-  },
-  benefitDesc: {
-    fontSize: "13px",
-    color: "#7c6a9a",
-    lineHeight: "1.6"
-  },
-  priceCard: {
-    maxWidth: "380px",
-    margin: "0 auto 40px",
-    padding: "36px",
-    textAlign: "center",
-    background: "rgba(16, 10, 40, 0.68)",
-    backdropFilter: "blur(16px)",
-    border: "1px solid rgba(232,121,160,0.18)",
-    borderRadius: "20px"
-  },
-  priceNum: {
-    fontFamily: "'Playfair Display', serif",
-    fontSize: "52px",
-    fontWeight: "700",
-    color: "#e879a0",
-    lineHeight: "1"
-  },
-  pricePeriod: {
-    fontSize: "14px",
-    color: "#7c6a9a",
-    marginBottom: "24px"
-  },
-  upgradeBtn: {
-    background: "linear-gradient(135deg, #d97706, #f5c842)",
-    color: "#fff",
-    border: "none",
-    borderRadius: "50px",
-    padding: "14px",
-    fontSize: "16px",
-    fontWeight: "700",
-    cursor: "pointer",
-    width: "100%",
-    marginBottom: "14px",
-    fontFamily: "'DM Sans', sans-serif"
-  },
-
-  // Notification
   notification: {
     position: "fixed",
     bottom: "30px",
@@ -4128,7 +3615,6 @@ const styles: Record<string, React.CSSProperties> = {
   }
 };
 
-// Add keyframes for animation
 if (typeof document !== "undefined") {
   const styleSheet = document.createElement("style");
   styleSheet.textContent = `
@@ -4140,14 +3626,27 @@ if (typeof document !== "undefined") {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes orbPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.08); opacity: 0.7; }
+    }
+    @keyframes wordFloat {
+      from { transform: translateY(0); opacity: 0.35; }
+      50% { opacity: 0.6; }
+      to { transform: translateY(-32px); opacity: 0; }
+    }
     .fade-in { animation: fadeInUp 0.5s ease both; }
     .fade-in-d1 { animation-delay: 0.1s; }
     .fade-in-d2 { animation-delay: 0.2s; }
     .fade-in-d3 { animation-delay: 0.3s; }
     @keyframes trayOpen {
-  from { opacity: 0; transform: translateY(8px) scale(0.95); }
-  to   { opacity: 1; transform: translateY(0)   scale(1);    }
-}
+      from { opacity: 0; transform: translateY(8px) scale(0.95); }
+      to   { opacity: 1; transform: translateY(0)   scale(1);    }
+    }
     @keyframes trailFade {
       0% { opacity: 0.75; transform: scale(1) rotate(0deg); }
       100% { opacity: 0; transform: scale(0.1) rotate(120deg) translateY(18px); }
@@ -4177,8 +3676,9 @@ if (typeof document !== "undefined") {
       cursor: none;
     }
     @media (max-width: 768px) {
-      .nav-links { display: none; }
-      .hamburger { display: flex; }
+      body { cursor: auto; }
+      #sakura-cursor { display: none; }
+      .cursor-trail-petal { display: none; }
     }
   `;
   document.head.appendChild(styleSheet);
