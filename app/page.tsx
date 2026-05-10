@@ -448,7 +448,14 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState<
     "home" | "feed" | "about" | "feedback"
   >("home");
+  const [isMobile, setIsMobile] = useState(false);
 
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
   const userRef = useRef<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [notifs, setNotifs] = useState<any[]>([]);
@@ -1872,7 +1879,14 @@ Reply: "${replyText.trim().slice(0, 300)}"`
   );
   // Feed View
   const renderFeed = () => (
-    <div style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: isMobile ? "column" : "row",
+        gap: "24px",
+        alignItems: "flex-start"
+      }}
+    >
       {/* Main feed column */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={styles.composeBox}>
@@ -2357,7 +2371,14 @@ Reply: "${replyText.trim().slice(0, 300)}"`
       </div>
 
       {/* Sidebar */}
-      <div style={styles.sidebar}>
+      <div
+        style={{
+          ...styles.sidebar,
+          width: isMobile ? "100%" : "280px",
+          position: isMobile ? "static" : "sticky",
+          maxHeight: isMobile ? "none" : "calc(100vh - 104px)"
+        }}
+      >
         {/* Smart Search Card */}
         <div style={styles.sideCard}>
           <div style={styles.sideCardTitle}>🔍 Search Posts</div>
@@ -2643,205 +2664,207 @@ Reply: "${replyText.trim().slice(0, 300)}"`
             Un<span style={{ fontStyle: "italic" }}>Tale</span>
           </span>
         </div>
-        <div style={styles.navLinks}>
-          <button
-            style={{
-              ...styles.navLink,
-              ...(currentPage === "home" ? styles.navLinkActive : {})
-            }}
-            onClick={() => setCurrentPage("home")}
-          >
-            Home
-          </button>
-          <button
-            style={{
-              ...styles.navLink,
-              ...(currentPage === "feed" ? styles.navLinkActive : {})
-            }}
-            onClick={() => setCurrentPage("feed")}
-          >
-            Feed
-          </button>
-          <button
-            style={{
-              ...styles.navLink,
-              ...(currentPage === "about" ? styles.navLinkActive : {})
-            }}
-            onClick={() => setCurrentPage("about")}
-          >
-            About
-          </button>
-          <button
-            style={{
-              ...styles.navLink,
-              ...(currentPage === "feedback" ? styles.navLinkActive : {})
-            }}
-            onClick={() => setCurrentPage("feedback")}
-          >
-            Feedback
-          </button>
-          <div style={styles.userSection}>
-            {/* Bell */}
-            <div style={{ position: "relative" }}>
-              <button
-                onClick={() => {
-                  setShowNotifDropdown(!showNotifDropdown);
-                  if (!showNotifDropdown) markAllRead();
-                }}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  background: showNotifDropdown
-                    ? "rgba(232,121,160,0.2)"
-                    : "rgba(232,121,160,0.08)",
-                  border: "1px solid rgba(232,121,160,0.28)",
-                  borderRadius: "50px",
-                  color: "#e879a0",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  padding: "7px 14px",
-                  cursor: "pointer",
-                  fontFamily: "'DM Sans', sans-serif",
-                  transition: "background 0.2s"
-                }}
-              >
-                🌸
-                {unreadCount > 0 ? (
-                  <span
-                    style={{
-                      background: "linear-gradient(135deg, #be185d, #e879a0)",
-                      color: "#fff",
-                      fontSize: "10px",
-                      fontWeight: 700,
-                      borderRadius: "50px",
-                      padding: "1px 7px"
-                    }}
-                  >
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
-                ) : (
-                  <span style={{ color: "#a89bc2", fontSize: "12px" }}>
-                    updates
-                  </span>
-                )}
-              </button>
-              {showNotifDropdown && (
-                <div
+        {!isMobile && (
+          <div style={styles.navLinks}>
+            <button
+              style={{
+                ...styles.navLink,
+                ...(currentPage === "home" ? styles.navLinkActive : {})
+              }}
+              onClick={() => setCurrentPage("home")}
+            >
+              Home
+            </button>
+            <button
+              style={{
+                ...styles.navLink,
+                ...(currentPage === "feed" ? styles.navLinkActive : {})
+              }}
+              onClick={() => setCurrentPage("feed")}
+            >
+              Feed
+            </button>
+            <button
+              style={{
+                ...styles.navLink,
+                ...(currentPage === "about" ? styles.navLinkActive : {})
+              }}
+              onClick={() => setCurrentPage("about")}
+            >
+              About
+            </button>
+            <button
+              style={{
+                ...styles.navLink,
+                ...(currentPage === "feedback" ? styles.navLinkActive : {})
+              }}
+              onClick={() => setCurrentPage("feedback")}
+            >
+              Feedback
+            </button>
+            <div style={styles.userSection}>
+              {/* Bell */}
+              <div style={{ position: "relative" }}>
+                <button
+                  onClick={() => {
+                    setShowNotifDropdown(!showNotifDropdown);
+                    if (!showNotifDropdown) markAllRead();
+                  }}
                   style={{
-                    position: "absolute",
-                    right: 0,
-                    top: "calc(100% + 10px)",
-                    width: "300px",
-                    background: "#1e1a32",
-                    border: "1px solid rgba(232,121,160,0.18)",
-                    borderRadius: "16px",
-                    padding: "12px",
-                    zIndex: 200,
-                    boxShadow: "0 8px 30px rgba(0,0,0,0.4)"
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    background: showNotifDropdown
+                      ? "rgba(232,121,160,0.2)"
+                      : "rgba(232,121,160,0.08)",
+                    border: "1px solid rgba(232,121,160,0.28)",
+                    borderRadius: "50px",
+                    color: "#e879a0",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    padding: "7px 14px",
+                    cursor: "pointer",
+                    fontFamily: "'DM Sans', sans-serif",
+                    transition: "background 0.2s"
                   }}
                 >
+                  🌸
+                  {unreadCount > 0 ? (
+                    <span
+                      style={{
+                        background: "linear-gradient(135deg, #be185d, #e879a0)",
+                        color: "#fff",
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        borderRadius: "50px",
+                        padding: "1px 7px"
+                      }}
+                    >
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  ) : (
+                    <span style={{ color: "#a89bc2", fontSize: "12px" }}>
+                      updates
+                    </span>
+                  )}
+                </button>
+                {showNotifDropdown && (
                   <div
                     style={{
-                      fontSize: "13px",
-                      fontWeight: 700,
-                      color: "#a89bc2",
-                      marginBottom: "10px",
-                      padding: "0 4px"
+                      position: "absolute",
+                      right: 0,
+                      top: "calc(100% + 10px)",
+                      width: "300px",
+                      background: "#1e1a32",
+                      border: "1px solid rgba(232,121,160,0.18)",
+                      borderRadius: "16px",
+                      padding: "12px",
+                      zIndex: 200,
+                      boxShadow: "0 8px 30px rgba(0,0,0,0.4)"
                     }}
                   >
-                    Notifications
-                  </div>
-                  {notifs.length === 0 ? (
                     <div
                       style={{
                         fontSize: "13px",
-                        color: "#5b4d72",
-                        textAlign: "center",
-                        padding: "20px 0"
+                        fontWeight: 700,
+                        color: "#a89bc2",
+                        marginBottom: "10px",
+                        padding: "0 4px"
                       }}
                     >
-                      No notifications yet 🌸
+                      Notifications
                     </div>
-                  ) : (
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "6px",
-                        maxHeight: "320px",
-                        overflowY: "auto"
-                      }}
-                    >
-                      {notifs.map((n) => (
-                        <div
-                          key={n.id}
-                          onClick={() => {
-                            setShowNotifDropdown(false);
-                            setCurrentPage("feed");
-                            setTimeout(() => {
-                              const el = document.getElementById(
-                                `post-${n.post_id}`
-                              );
-                              if (el) {
-                                el.scrollIntoView({
-                                  behavior: "smooth",
-                                  block: "center"
-                                });
-                                el.style.transition = "box-shadow 0.4s ease";
-                                el.style.boxShadow =
-                                  "0 0 0 2px rgba(232,121,160,0.7)";
-                                setTimeout(() => {
-                                  el.style.boxShadow = "";
-                                }, 2000);
-                              }
-                            }, 200);
-                          }}
-                          style={{
-                            padding: "10px 12px",
-                            borderRadius: "10px",
-                            background: n.read
-                              ? "transparent"
-                              : "rgba(232,121,160,0.08)",
-                            border: "1px solid rgba(232,121,160,0.08)",
-                            fontSize: "13px",
-                            color: "#d8cff0",
-                            lineHeight: 1.5,
-                            cursor: "pointer",
-                            transition: "background 0.15s"
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.background =
-                              "rgba(232,121,160,0.15)")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.background = n.read
-                              ? "transparent"
-                              : "rgba(232,121,160,0.08)")
-                          }
-                        >
-                          {n.type === "like"
-                            ? `❤️ ${n.triggered_by} liked your post`
-                            : `💬 ${n.triggered_by} replied to your post`}
+                    {notifs.length === 0 ? (
+                      <div
+                        style={{
+                          fontSize: "13px",
+                          color: "#5b4d72",
+                          textAlign: "center",
+                          padding: "20px 0"
+                        }}
+                      >
+                        No notifications yet 🌸
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "6px",
+                          maxHeight: "320px",
+                          overflowY: "auto"
+                        }}
+                      >
+                        {notifs.map((n) => (
                           <div
-                            style={{
-                              fontSize: "11px",
-                              color: "#5b4d72",
-                              marginTop: "3px"
+                            key={n.id}
+                            onClick={() => {
+                              setShowNotifDropdown(false);
+                              setCurrentPage("feed");
+                              setTimeout(() => {
+                                const el = document.getElementById(
+                                  `post-${n.post_id}`
+                                );
+                                if (el) {
+                                  el.scrollIntoView({
+                                    behavior: "smooth",
+                                    block: "center"
+                                  });
+                                  el.style.transition = "box-shadow 0.4s ease";
+                                  el.style.boxShadow =
+                                    "0 0 0 2px rgba(232,121,160,0.7)";
+                                  setTimeout(() => {
+                                    el.style.boxShadow = "";
+                                  }, 2000);
+                                }
+                              }, 200);
                             }}
+                            style={{
+                              padding: "10px 12px",
+                              borderRadius: "10px",
+                              background: n.read
+                                ? "transparent"
+                                : "rgba(232,121,160,0.08)",
+                              border: "1px solid rgba(232,121,160,0.08)",
+                              fontSize: "13px",
+                              color: "#d8cff0",
+                              lineHeight: 1.5,
+                              cursor: "pointer",
+                              transition: "background 0.15s"
+                            }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.background =
+                                "rgba(232,121,160,0.15)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.background = n.read
+                                ? "transparent"
+                                : "rgba(232,121,160,0.08)")
+                            }
                           >
-                            {timeAgo(n.created_at)}
+                            {n.type === "like"
+                              ? `❤️ ${n.triggered_by} liked your post`
+                              : `💬 ${n.triggered_by} replied to your post`}
+                            <div
+                              style={{
+                                fontSize: "11px",
+                                color: "#5b4d72",
+                                marginTop: "3px"
+                              }}
+                            >
+                              {timeAgo(n.created_at)}
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              <span style={styles.userName}>{displayName}</span>
             </div>
-            <span style={styles.userName}>{displayName}</span>
           </div>
-        </div>
+        )}
         <button
           style={styles.hamburger}
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
