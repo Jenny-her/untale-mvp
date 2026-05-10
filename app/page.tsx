@@ -594,6 +594,27 @@ export default function Home() {
     const patterns: { regex: RegExp; msg: string }[] = [
       // Personal info sharing / fishing
       {
+        regex: /\bkill\s*(my|your|him|her|them)?self\b/i,
+        msg: "If you're struggling, you're not alone 🌸"
+      },
+      {
+        regex:
+          /\b(how to (commit suicide|die by suicide)|steps? to suicide|methods? (for|of) suicide)\b/i,
+        msg: "If you're struggling, you're not alone 🌸"
+      },
+      {
+        regex: /\b(hang|shoot|overdose|jump\s*off).{0,20}(myself|yourself)\b/i,
+        msg: "If you're struggling, you're not alone 🌸"
+      },
+      {
+        regex: /\bf[\W_]*u[\W_]*c[\W_]*k/i,
+        msg: "Please keep it kind — abusive language isn't allowed here 🌸"
+      },
+      {
+        regex: /\bs[\W_]*h[\W_]*i[\W_]*t/i,
+        msg: "Please keep it kind — abusive language isn't allowed here 🌸"
+      },
+      {
         regex: /\b(\d{10}|\d{3}[-.\s]\d{3}[-.\s]\d{4})\b/,
         msg: "Please don't share phone numbers 🌸"
       },
@@ -687,41 +708,6 @@ export default function Home() {
     // ──────────────────────────────────────────────────────────
     setPosting(true);
 
-    // ─── AI moderation ────────────────────────────────────────
-    try {
-      const modRes = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 60,
-          messages: [
-            {
-              role: "user",
-              content: `You are a content moderator for an anonymous mental health / emotional support community called UnTale. People share feelings, struggles, and stories here.
-
-Review this post and reply with ONLY one of:
-- "ALLOW" if it's a genuine emotional post (sadness, anxiety, venting, love, anger, happiness, trauma, etc.)
-- "BLOCK: [short reason]" if it contains: personal info (phone/email/address), requests for personal info, illegal activity, hate speech, slurs, spam/promotion, explicit sexual content, content that sexualizes minors, or instructions for self-harm methods.
-
-Be LENIENT. Dark emotions, swearing, and heavy topics are allowed. Only block clear violations.
-
-Post: "${text.trim().slice(0, 500)}"`
-            }
-          ]
-        })
-      });
-      const modData = await modRes.json();
-      const verdict = modData?.content?.[0]?.text?.trim() ?? "ALLOW";
-      if (verdict.startsWith("BLOCK")) {
-        const reason = verdict.replace("BLOCK:", "").trim();
-        showNotification(`This post can't be shared: ${reason} 🌸`, "warn");
-        setPosting(false);
-        return;
-      }
-    } catch {
-      // If AI check fails, allow the post (don't block on API errors)
-    }
     // ──────────────────────────────────────────────────────────
     const { error } = await supabase.from("posts").insert([
       {
@@ -858,37 +844,6 @@ Post: "${text.trim().slice(0, 500)}"`
     }
 
     setReplySubmitting(true);
-
-    try {
-      const modRes = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 60,
-          messages: [
-            {
-              role: "user",
-              content: `You moderate an anonymous emotional support community. Review this reply and respond ONLY with "ALLOW" or "BLOCK: [reason]".
-
-ALWAYS BLOCK if the reply asks for or shares: phone numbers, emails, addresses, social media handles, Discord, Telegram, WhatsApp. This includes typos and shorthand like "numer", "num", "phne", "ur num", "yr number", "gib number", "wat is ur num", "drop ur no", "hmu", "hit me up", "dm me", "text me", "find me on", "add me on". If someone is clearly trying to get or share contact info in any form, BLOCK it.
-
-Reply: "${replyText.trim().slice(0, 300)}"`
-            }
-          ]
-        })
-      });
-      const modData = await modRes.json();
-      const verdict = modData?.content?.[0]?.text?.trim() ?? "ALLOW";
-      if (verdict.startsWith("BLOCK")) {
-        const reason = verdict.replace("BLOCK:", "").trim();
-        showNotification(`This reply can't be posted: ${reason} 🌸`, "warn");
-        setReplySubmitting(false);
-        return;
-      }
-    } catch {
-      // Allow on API error
-    }
 
     const { data, error } = await supabase
       .from("replies")
@@ -2902,6 +2857,189 @@ Reply: "${replyText.trim().slice(0, 300)}"`
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div style={styles.mobileMenu}>
+          {mobileMenuOpen && (
+            <div style={styles.mobileMenu}>
+              <button
+                style={styles.mobileLink}
+                onClick={() => {
+                  setCurrentPage("home");
+                  setMobileMenuOpen(false);
+                }}
+              >
+                Home
+              </button>
+              <button
+                style={styles.mobileLink}
+                onClick={() => {
+                  setCurrentPage("feed");
+                  setMobileMenuOpen(false);
+                }}
+              >
+                Feed
+              </button>
+              <button
+                style={styles.mobileLink}
+                onClick={() => {
+                  setCurrentPage("about");
+                  setMobileMenuOpen(false);
+                }}
+              >
+                About
+              </button>
+              <button
+                style={styles.mobileLink}
+                onClick={() => {
+                  setCurrentPage("feedback");
+                  setMobileMenuOpen(false);
+                }}
+              >
+                Feedback
+              </button>
+
+              {/* Divider */}
+              <div
+                style={{
+                  height: "1px",
+                  background: "rgba(232,121,160,0.15)",
+                  margin: "8px 0"
+                }}
+              />
+
+              {/* Notifications */}
+              <button
+                style={{
+                  ...styles.mobileLink,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  color: "#e879a0"
+                }}
+                onClick={() => {
+                  setShowNotifDropdown(!showNotifDropdown);
+                  if (!showNotifDropdown) markAllRead();
+                }}
+              >
+                🌸 Notifications
+                {unreadCount > 0 && (
+                  <span
+                    style={{
+                      background: "linear-gradient(135deg, #be185d, #e879a0)",
+                      color: "#fff",
+                      fontSize: "10px",
+                      fontWeight: 700,
+                      borderRadius: "50px",
+                      padding: "1px 8px"
+                    }}
+                  >
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Notification list inline */}
+              {showNotifDropdown && (
+                <div
+                  style={{
+                    margin: "4px 8px",
+                    background: "#1e1a32",
+                    border: "1px solid rgba(232,121,160,0.18)",
+                    borderRadius: "14px",
+                    padding: "10px"
+                  }}
+                >
+                  {notifs.length === 0 ? (
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        color: "#5b4d72",
+                        textAlign: "center",
+                        padding: "14px 0"
+                      }}
+                    >
+                      No notifications yet 🌸
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "6px",
+                        maxHeight: "240px",
+                        overflowY: "auto"
+                      }}
+                    >
+                      {notifs.map((n) => (
+                        <div
+                          key={n.id}
+                          onClick={() => {
+                            setShowNotifDropdown(false);
+                            setMobileMenuOpen(false);
+                            setCurrentPage("feed");
+                            setTimeout(() => {
+                              const el = document.getElementById(
+                                `post-${n.post_id}`
+                              );
+                              if (el) {
+                                el.scrollIntoView({
+                                  behavior: "smooth",
+                                  block: "center"
+                                });
+                                el.style.transition = "box-shadow 0.4s ease";
+                                el.style.boxShadow =
+                                  "0 0 0 2px rgba(232,121,160,0.7)";
+                                setTimeout(() => {
+                                  el.style.boxShadow = "";
+                                }, 2000);
+                              }
+                            }, 200);
+                          }}
+                          style={{
+                            padding: "10px 12px",
+                            borderRadius: "10px",
+                            background: n.read
+                              ? "transparent"
+                              : "rgba(232,121,160,0.08)",
+                            border: "1px solid rgba(232,121,160,0.08)",
+                            fontSize: "13px",
+                            color: "#d8cff0",
+                            lineHeight: 1.5,
+                            cursor: "pointer"
+                          }}
+                        >
+                          {n.type === "like"
+                            ? `❤️ ${n.triggered_by} liked your post`
+                            : `💬 ${n.triggered_by} replied to your post`}
+                          <div
+                            style={{
+                              fontSize: "11px",
+                              color: "#5b4d72",
+                              marginTop: "3px"
+                            }}
+                          >
+                            {timeAgo(n.created_at)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Username */}
+              <div
+                style={{
+                  padding: "8px 16px",
+                  fontSize: "12px",
+                  color: "#5b4d72"
+                }}
+              >
+                Posting as{" "}
+                <span style={{ color: "#e879a0", fontWeight: 600 }}>
+                  {displayName}
+                </span>
+              </div>
+            </div>
+          )}
           <button
             style={styles.mobileLink}
             onClick={() => {
@@ -3604,6 +3742,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderTop: "1px solid rgba(232,121,160,0.18)"
   },
   replyInput: {
+    boxSizing: "border-box" as const,
     width: "100%",
     padding: "10px 14px",
     borderRadius: "12px",
