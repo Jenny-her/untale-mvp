@@ -581,3 +581,9 @@ const smallBtn: React.CSSProperties = {
   padding: "6px 12px",
   fontFamily: "'DM Sans', sans-serif"
 };
+// Add cursor style for admin page
+if (typeof document !== "undefined") {
+  const styleSheet = document.createElement("style");
+  styleSheet.textContent = `body { cursor: auto !important; }`;
+  document.head.appendChild(styleSheet);
+}
