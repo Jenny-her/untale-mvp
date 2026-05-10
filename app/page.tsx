@@ -2866,12 +2866,36 @@ Reply: "${replyText.trim().slice(0, 300)}"`
           </div>
         )}
         <button
-          style={styles.hamburger}
+          style={{ ...styles.hamburger, display: isMobile ? "flex" : "none" }}
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
-          <span />
-          <span />
-          <span />
+          <span
+            style={{
+              display: "block",
+              width: "22px",
+              height: "2px",
+              background: "#e879a0",
+              borderRadius: "2px"
+            }}
+          />
+          <span
+            style={{
+              display: "block",
+              width: "22px",
+              height: "2px",
+              background: "#e879a0",
+              borderRadius: "2px"
+            }}
+          />
+          <span
+            style={{
+              display: "block",
+              width: "22px",
+              height: "2px",
+              background: "#e879a0",
+              borderRadius: "2px"
+            }}
+          />
         </button>
       </div>
 
