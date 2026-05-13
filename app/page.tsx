@@ -96,7 +96,7 @@ function AuthModal({
     const { error: e } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin,
+        redirectTo: "https://untale.vercel.app",
         queryParams: { prompt: "select_account" }
       }
     });
