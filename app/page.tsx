@@ -67,6 +67,657 @@ const timeAgo = (dateString: string) => {
   return "just now";
 };
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+type AuthMode = "login" | "signup";
+
+// ─── Auth Modal ───────────────────────────────────────────────────────────────
+function AuthModal({
+  onClose,
+  onSuccess,
+  anonUserId
+}: {
+  onClose: () => void;
+  onSuccess: (user: any, name: string, wasAnon: boolean) => void;
+  anonUserId?: string;
+}) {
+  const [mode, setMode] = useState<AuthMode>("signup");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    setError("");
+    const { error: e } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+        queryParams: { prompt: "select_account" }
+      }
+    });
+    if (e) {
+      setError(e.message);
+      setGoogleLoading(false);
+    }
+  };
+
+  const inputStyle: React.CSSProperties = {
+    padding: "12px 16px",
+    background: "rgba(16,10,40,0.7)",
+    border: "1.5px solid rgba(232,121,160,0.22)",
+    borderRadius: "14px",
+    color: "#ede8f8",
+    fontSize: "14px",
+    outline: "none",
+    width: "100%",
+    boxSizing: "border-box",
+    fontFamily: "'DM Sans', sans-serif"
+  };
+
+  const submit = async () => {
+    setError("");
+    setSuccess("");
+    if (!email.trim() || !password.trim()) {
+      setError("Please fill in all fields.");
+      return;
+    }
+
+    if (mode === "signup") {
+      if (password !== confirmPassword) {
+        setError("Passwords don't match.");
+        return;
+      }
+      if (password.length < 6) {
+        setError("Password must be at least 6 characters.");
+        return;
+      }
+      setLoading(true);
+      const newName = generateName();
+      const { data, error: e } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+        options: { data: { display_name: newName, is_premium: false } }
+      });
+      if (e) {
+        setError(e.message);
+        setLoading(false);
+        return;
+      }
+      if (data.user && data.session) {
+        // signed up and auto-confirmed
+        onSuccess(data.user, newName, !!anonUserId);
+      } else {
+        setSuccess("Check your email to confirm, then log in 🌸");
+      }
+      setLoading(false);
+    } else {
+      setLoading(true);
+      const { data, error: e } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password
+      });
+      if (e) {
+        setError(
+          e.message === "Invalid login credentials"
+            ? "Wrong email or password."
+            : e.message
+        );
+        setLoading(false);
+        return;
+      }
+      if (data.user) {
+        const name = data.user.user_metadata?.display_name || generateName();
+        onSuccess(data.user, name, false);
+      }
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9000,
+        background: "rgba(6,3,20,0.82)",
+        backdropFilter: "blur(8px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "20px"
+      }}
+    >
+      <div
+        style={{
+          background: "rgba(16,10,40,0.97)",
+          border: "1px solid rgba(232,121,160,0.22)",
+          borderRadius: "24px",
+          padding: "36px 32px",
+          width: "100%",
+          maxWidth: "420px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "14px",
+          position: "relative",
+          boxShadow: "0 24px 80px rgba(0,0,0,0.6)"
+        }}
+      >
+        {/* Close */}
+        <button
+          onClick={onClose}
+          style={{
+            position: "absolute",
+            top: "16px",
+            right: "18px",
+            background: "transparent",
+            border: "none",
+            color: "#5b4d72",
+            fontSize: "18px",
+            cursor: "pointer",
+            lineHeight: 1
+          }}
+        >
+          ✕
+        </button>
+
+        {/* Logo */}
+        <div
+          style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: "28px",
+            fontWeight: 700,
+            color: "#e879a0",
+            textAlign: "center"
+          }}
+        >
+          Un<em style={{ fontStyle: "italic" }}>Tale</em>
+        </div>
+        <p
+          style={{
+            textAlign: "center",
+            color: "#7c6a9a",
+            fontSize: "13px",
+            margin: 0,
+            lineHeight: 1.6
+          }}
+        >
+          {mode === "signup"
+            ? "Create your account — your identity, everywhere 🌸"
+            : "Welcome back. Your stories missed you."}
+        </p>
+        {/* Google Sign In */}
+        <button
+          onClick={handleGoogleSignIn}
+          disabled={googleLoading}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "10px",
+            padding: "11px 16px",
+            background: "rgba(255,255,255,0.05)",
+            border: "1.5px solid rgba(255,255,255,0.15)",
+            borderRadius: "14px",
+            color: "#ede8f8",
+            fontSize: "14px",
+            fontWeight: 600,
+            cursor: googleLoading ? "not-allowed" : "pointer",
+            opacity: googleLoading ? 0.6 : 1,
+            fontFamily: "'DM Sans', sans-serif",
+            width: "100%"
+          }}
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 18 18"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
+              fill="#4285F4"
+            />
+            <path
+              d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"
+              fill="#34A853"
+            />
+            <path
+              d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"
+              fill="#FBBC05"
+            />
+            <path
+              d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z"
+              fill="#EA4335"
+            />
+          </svg>
+          {googleLoading ? "Redirecting…" : "Continue with Google"}
+        </button>
+
+        {/* Divider */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div
+            style={{
+              flex: 1,
+              height: "1px",
+              background: "rgba(232,121,160,0.15)"
+            }}
+          />
+          <span style={{ fontSize: "12px", color: "#5b4d72" }}>
+            or use email
+          </span>
+          <div
+            style={{
+              flex: 1,
+              height: "1px",
+              background: "rgba(232,121,160,0.15)"
+            }}
+          />
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: "8px" }}></div>
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: "8px" }}>
+          {(["signup", "login"] as AuthMode[]).map((m) => (
+            <button
+              key={m}
+              onClick={() => {
+                setMode(m);
+                setError("");
+                setSuccess("");
+              }}
+              style={{
+                flex: 1,
+                padding: "10px",
+                borderRadius: "50px",
+                fontSize: "14px",
+                fontWeight: mode === m ? 700 : 500,
+                cursor: "pointer",
+                fontFamily: "'DM Sans', sans-serif",
+                transition: "all 0.2s",
+                background: mode === m ? "rgba(190,24,93,0.15)" : "transparent",
+                border:
+                  mode === m
+                    ? "1.5px solid #e879a0"
+                    : "1.5px solid rgba(192,132,200,0.3)",
+                color: mode === m ? "#e879a0" : "#a89bc2"
+              }}
+            >
+              {m === "signup" ? "Sign Up" : "Log In"}
+            </button>
+          ))}
+        </div>
+
+        {/* Fields */}
+        <input
+          type="email"
+          placeholder="Email address"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && submit()}
+          style={inputStyle}
+          autoComplete="email"
+        />
+
+        <div style={{ position: "relative" }}>
+          <input
+            type={showPw ? "text" : "password"}
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && submit()}
+            style={{ ...inputStyle, paddingRight: "44px" }}
+            autoComplete={
+              mode === "signup" ? "new-password" : "current-password"
+            }
+          />
+          <button
+            onClick={() => setShowPw(!showPw)}
+            tabIndex={-1}
+            style={{
+              position: "absolute",
+              right: "12px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "16px"
+            }}
+          >
+            {showPw ? "🙈" : "👁️"}
+          </button>
+        </div>
+
+        {mode === "signup" && (
+          <input
+            type={showPw ? "text" : "password"}
+            placeholder="Confirm password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && submit()}
+            style={inputStyle}
+            autoComplete="new-password"
+          />
+        )}
+
+        {mode === "signup" && (
+          <p
+            style={{
+              fontSize: "12px",
+              color: "#5b4d72",
+              margin: 0,
+              lineHeight: 1.7,
+              textAlign: "center"
+            }}
+          >
+            🌸 You'll get a unique mystery name like{" "}
+            <strong style={{ color: "#a89bc2" }}>petal392</strong> — anonymous,
+            but yours forever across every device.
+          </p>
+        )}
+
+        {error && (
+          <p
+            style={{
+              color: "#f87171",
+              fontSize: "13px",
+              margin: 0,
+              textAlign: "center"
+            }}
+          >
+            {error}
+          </p>
+        )}
+        {success && (
+          <p
+            style={{
+              color: "#6bffb8",
+              fontSize: "13px",
+              margin: 0,
+              textAlign: "center"
+            }}
+          >
+            {success}
+          </p>
+        )}
+
+        <button
+          onClick={submit}
+          disabled={loading}
+          style={{
+            padding: "13px",
+            background: "linear-gradient(135deg, #be185d, #e879a0)",
+            color: "#fff",
+            border: "none",
+            borderRadius: "50px",
+            fontWeight: 700,
+            fontSize: "15px",
+            cursor: loading ? "not-allowed" : "pointer",
+            opacity: loading ? 0.6 : 1,
+            fontFamily: "'DM Sans', sans-serif",
+            boxShadow: "0 4px 20px rgba(190,24,93,0.4)",
+            transition: "all 0.2s"
+          }}
+        >
+          {loading
+            ? "Please wait…"
+            : mode === "signup"
+              ? "🌸 Create My Account"
+              : "→ Log In"}
+        </button>
+
+        <p
+          style={{
+            textAlign: "center",
+            fontSize: "13px",
+            color: "#5b4d72",
+            margin: 0
+          }}
+        >
+          {mode === "signup" ? "Already have an account? " : "New here? "}
+          <span
+            onClick={() => {
+              setMode(mode === "signup" ? "login" : "signup");
+              setError("");
+              setSuccess("");
+            }}
+            style={{ color: "#e879a0", cursor: "pointer", fontWeight: 600 }}
+          >
+            {mode === "signup" ? "Log in" : "Sign up"}
+          </span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Claim Posts Modal ────────────────────────────────────────────────────────
+function ClaimPostsModal({
+  anonUserId,
+  newUserId,
+  displayName,
+  onDone
+}: {
+  anonUserId: string;
+  newUserId: string;
+  displayName: string;
+  onDone: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+
+  const claim = async () => {
+    setLoading(true);
+    await supabase
+      .from("posts")
+      .update({ anonymous_id: newUserId, display_name: displayName })
+      .eq("anonymous_id", anonUserId);
+    await supabase
+      .from("likes")
+      .update({ user_id: newUserId })
+      .eq("user_id", anonUserId);
+    setLoading(false);
+    onDone();
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9001,
+        background: "rgba(6,3,20,0.88)",
+        backdropFilter: "blur(8px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "20px"
+      }}
+    >
+      <div
+        style={{
+          background: "rgba(16,10,40,0.97)",
+          border: "1px solid rgba(232,121,160,0.22)",
+          borderRadius: "24px",
+          padding: "36px 28px",
+          width: "100%",
+          maxWidth: "380px",
+          textAlign: "center",
+          boxShadow: "0 24px 80px rgba(0,0,0,0.6)"
+        }}
+      >
+        <div style={{ fontSize: "44px", marginBottom: "14px" }}>🌸</div>
+        <h2
+          style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: "20px",
+            color: "#f1eaff",
+            marginBottom: "10px"
+          }}
+        >
+          Claim your anonymous posts?
+        </h2>
+        <p
+          style={{
+            fontSize: "14px",
+            color: "#7c6a9a",
+            lineHeight: 1.7,
+            marginBottom: "24px"
+          }}
+        >
+          You wrote some stories before signing up. Want to attach them to your
+          account so they follow you everywhere?
+        </p>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button
+            onClick={onDone}
+            style={{
+              flex: 1,
+              padding: "12px",
+              background: "transparent",
+              border: "1.5px solid rgba(192,132,200,0.35)",
+              borderRadius: "50px",
+              color: "#a89bc2",
+              fontSize: "14px",
+              cursor: "pointer",
+              fontFamily: "'DM Sans', sans-serif"
+            }}
+          >
+            No, start fresh
+          </button>
+          <button
+            onClick={claim}
+            disabled={loading}
+            style={{
+              flex: 1,
+              padding: "12px",
+              background: "linear-gradient(135deg, #be185d, #e879a0)",
+              border: "none",
+              borderRadius: "50px",
+              color: "#fff",
+              fontSize: "14px",
+              fontWeight: 700,
+              cursor: loading ? "not-allowed" : "pointer",
+              opacity: loading ? 0.6 : 1,
+              fontFamily: "'DM Sans', sans-serif"
+            }}
+          >
+            {loading ? "Claiming…" : "Yes, claim them"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Guest Prompt (shown when anon tries to interact) ─────────────────────────
+function GuestPrompt({
+  onSignUp,
+  onDismiss
+}: {
+  onSignUp: () => void;
+  onDismiss: () => void;
+}) {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 8999,
+        background: "rgba(6,3,20,0.75)",
+        backdropFilter: "blur(6px)",
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "center",
+        padding: "0 0 40px"
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onDismiss();
+      }}
+    >
+      <div
+        style={{
+          background: "rgba(16,10,40,0.98)",
+          border: "1px solid rgba(232,121,160,0.22)",
+          borderRadius: "24px",
+          padding: "28px 28px 24px",
+          width: "100%",
+          maxWidth: "420px",
+          textAlign: "center",
+          boxShadow: "0 -8px 40px rgba(0,0,0,0.5)"
+        }}
+      >
+        <div style={{ fontSize: "36px", marginBottom: "10px" }}>🌸</div>
+        <p
+          style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: "18px",
+            color: "#f1eaff",
+            marginBottom: "8px"
+          }}
+        >
+          Join to share your story
+        </p>
+        <p
+          style={{
+            fontSize: "13px",
+            color: "#7c6a9a",
+            lineHeight: 1.7,
+            marginBottom: "20px"
+          }}
+        >
+          Create a free account to post, like, and reply — and keep your
+          identity across every device.
+        </p>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button
+            onClick={onDismiss}
+            style={{
+              flex: 1,
+              padding: "11px",
+              background: "transparent",
+              border: "1.5px solid rgba(192,132,200,0.3)",
+              borderRadius: "50px",
+              color: "#a89bc2",
+              fontSize: "14px",
+              cursor: "pointer",
+              fontFamily: "'DM Sans', sans-serif"
+            }}
+          >
+            Maybe later
+          </button>
+          <button
+            onClick={onSignUp}
+            style={{
+              flex: 1,
+              padding: "11px",
+              background: "linear-gradient(135deg, #be185d, #e879a0)",
+              border: "none",
+              borderRadius: "50px",
+              color: "#fff",
+              fontSize: "14px",
+              fontWeight: 700,
+              cursor: "pointer",
+              fontFamily: "'DM Sans', sans-serif",
+              boxShadow: "0 4px 18px rgba(190,24,93,0.4)"
+            }}
+          >
+            🌸 Sign up free
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FeedbackForm({
   displayName,
   showNotification
@@ -452,6 +1103,15 @@ export default function Home() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
+  // ─── Auth state ──────────────────────────────────────────────────────────
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [anonSessionId, setAnonSessionId] = useState<string>("");
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showClaimModal, setShowClaimModal] = useState(false);
+  const [pendingClaimAnonId, setPendingClaimAnonId] = useState("");
+  const [showGuestPrompt, setShowGuestPrompt] = useState(false);
+  // ─────────────────────────────────────────────────────────────────────────
+
   const userRef = useRef<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [notifs, setNotifs] = useState<any[]>([]);
@@ -703,6 +1363,7 @@ export default function Home() {
   };
 
   const createPost = async () => {
+    if (!requireLogin()) return;
     if (!text.trim()) {
       showNotification("Write something first 🌸");
       return;
@@ -746,6 +1407,9 @@ export default function Home() {
   const handleUserSession = async (authUser: any): Promise<string> => {
     setUser(authUser);
     userRef.current = authUser;
+    // A real (non-anonymous) user has an email
+    const isReal = !!(authUser.email || authUser.user_metadata?.email);
+    setIsLoggedIn(isReal);
     const existingName = authUser.user_metadata?.display_name;
     if (existingName) {
       setDisplayName(existingName);
@@ -759,7 +1423,69 @@ export default function Home() {
     return newName;
   };
 
+  // Called after successful signup/login from AuthModal
+  const handleAuthSuccess = async (
+    authUser: any,
+    name: string,
+    wasAnon: boolean
+  ) => {
+    setShowAuthModal(false);
+    setUser(authUser);
+    userRef.current = authUser;
+    setIsLoggedIn(true);
+    setDisplayName(name);
+
+    // If they had an anonymous session with posts, offer to claim
+    if (wasAnon && anonSessionId && anonSessionId !== authUser.id) {
+      const { count } = await supabase
+        .from("posts")
+        .select("*", { count: "exact", head: true })
+        .eq("anonymous_id", anonSessionId);
+      if (count && count > 0) {
+        setPendingClaimAnonId(anonSessionId);
+        setShowClaimModal(true);
+        return;
+      }
+    }
+
+    await loadPosts(0, false, authUser.id);
+    await loadPostsToday(authUser.id);
+    await loadNotifications(authUser.id);
+    showNotification("Welcome to UnTale 🌸", "success");
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setIsLoggedIn(false);
+    setDisplayName("");
+    setLikedPosts(new Set());
+    setNotifs([]);
+    showNotification("Logged out 🌸");
+    // Re-init anonymous session
+    const { data } = await supabase.auth.signInAnonymously();
+    if (data?.user) {
+      const name = data.user.user_metadata?.display_name || generateName();
+      if (!data.user.user_metadata?.display_name) {
+        await supabase.auth.updateUser({ data: { display_name: name } });
+      }
+      setUser(data.user);
+      userRef.current = data.user;
+      setAnonSessionId(data.user.id);
+      setDisplayName(name);
+      await loadPosts(0, false, data.user.id);
+    }
+  };
+
+  // Gate interactions behind login
+  const requireLogin = (): boolean => {
+    if (isLoggedIn) return true;
+    setShowGuestPrompt(true);
+    return false;
+  };
+
   const handleLike = async (postId: number) => {
+    if (!requireLogin()) return;
     if (!user) return;
 
     const alreadyLiked = likedPosts.has(postId);
@@ -844,6 +1570,7 @@ export default function Home() {
   };
 
   const handleReply = async (postId: number) => {
+    if (!requireLogin()) return;
     if (!replyText.trim()) {
       showNotification("Write something first 🌸");
       return;
@@ -1301,6 +2028,7 @@ export default function Home() {
       } else {
         const { data, error } = await supabase.auth.signInAnonymously();
         if (!error && data.user) {
+          setAnonSessionId(data.user.id);
           await handleUserSession(data.user);
           await loadPosts(0, false, data.user.id);
           await loadPostsToday(data.user.id);
@@ -1312,9 +2040,18 @@ export default function Home() {
     init();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         if (session?.user) {
-          await handleUserSession(session.user);
+          if (
+            event === "SIGNED_IN" &&
+            !session.user.user_metadata?.display_name
+          ) {
+            const newName = generateName();
+            await supabase.auth.updateUser({ data: { display_name: newName } });
+            await handleAuthSuccess(session.user, newName, false);
+          } else {
+            await handleUserSession(session.user);
+          }
         } else {
           setUser(null);
           setDisplayName("");
@@ -1805,24 +2542,34 @@ export default function Home() {
             desc: "Kindness is the default here. Community guidelines protect every voice.",
             accent: "#60a5fa"
           }
+          // ].map((f, i) => (
+          //   <div
+          //     key={f.title}
+          //     style={{
+          //       ...styles.tile,
+          //       animationDelay: `${0.2 + i * 0.15}s`,
+          //       borderTopColor: f.accent
+          //     }}
+          //     onMouseEnter={(e) => {
+          //       (e.currentTarget as HTMLDivElement).style.transform =
+          //         "translateY(-6px)";
+          //       (e.currentTarget as HTMLDivElement).style.boxShadow =
+          //         `0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px ${f.accent}33`;
+          //     }}
+          //     onMouseLeave={(e) => {
+          //       (e.currentTarget as HTMLDivElement).style.transform =
+          //         "translateY(0)";
+          //       (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+          //     }}
+          //   >
         ].map((f, i) => (
           <div
             key={f.title}
+            className="feature-tile"
             style={{
               ...styles.tile,
               animationDelay: `${0.2 + i * 0.15}s`,
               borderTopColor: f.accent
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLDivElement).style.transform =
-                "translateY(-6px)";
-              (e.currentTarget as HTMLDivElement).style.boxShadow =
-                `0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px ${f.accent}33`;
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLDivElement).style.transform =
-                "translateY(0)";
-              (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
             }}
           >
             <div style={styles.tileIcon}>{f.icon}</div>
@@ -1869,14 +2616,36 @@ export default function Home() {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={styles.composeBox}>
           <div style={styles.composeMeta}>
-            Posting as{" "}
-            <strong style={{ color: "#e879a0" }}>{displayName || "…"}</strong>
+            {isLoggedIn ? (
+              <>
+                Posting as{" "}
+                <strong style={{ color: "#e879a0" }}>
+                  {displayName || "…"}
+                </strong>
+              </>
+            ) : (
+              <span style={{ color: "#7c6a9a" }}>
+                Sign in to share your story 🌸
+              </span>
+            )}
           </div>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="What's on your mind? Speak freely…"
-            style={styles.textarea}
+            onClick={() => {
+              if (!isLoggedIn) setShowGuestPrompt(true);
+            }}
+            readOnly={!isLoggedIn}
+            placeholder={
+              isLoggedIn
+                ? "What's on your mind? Speak freely…"
+                : "Read the feed below — sign in to post your own story…"
+            }
+            style={{
+              ...styles.textarea,
+              opacity: isLoggedIn ? 1 : 0.5,
+              cursor: isLoggedIn ? "text" : "pointer"
+            }}
             maxLength={600}
           />
           <div
@@ -1983,6 +2752,10 @@ export default function Home() {
                     if (showReplyId === p.id) {
                       setShowReplyId(null);
                     } else {
+                      if (!isLoggedIn) {
+                        setShowGuestPrompt(true);
+                        return;
+                      }
                       setShowReplyId(p.id);
                       if (!repliesMap.has(p.id)) loadReplies(p.id);
                     }
@@ -2438,15 +3211,37 @@ export default function Home() {
             >
               🌸
             </div>
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 700, color: "#e879a0", fontSize: 14 }}>
                 {displayName || "…"}
               </div>
               <div style={{ fontSize: 11, color: "#5b4d72", marginTop: 2 }}>
-                Anonymous · same device
+                {isLoggedIn
+                  ? "✓ Signed in · synced everywhere"
+                  : "Browsing as guest"}
               </div>
             </div>
           </div>
+          {!isLoggedIn && (
+            <button
+              onClick={() => setShowAuthModal(true)}
+              style={{
+                marginTop: "12px",
+                width: "100%",
+                padding: "9px",
+                background: "linear-gradient(135deg, #be185d, #e879a0)",
+                border: "none",
+                borderRadius: "50px",
+                color: "#fff",
+                fontSize: "12px",
+                fontWeight: 700,
+                cursor: "pointer",
+                fontFamily: "'DM Sans', sans-serif"
+              }}
+            >
+              🌸 Sign up to save your identity
+            </button>
+          )}
         </div>
 
         <div style={styles.sideCard}>
@@ -2792,7 +3587,44 @@ export default function Home() {
                   </div>
                 )}
               </div>
-              <span style={styles.userName}>{displayName}</span>
+              {isLoggedIn ? (
+                <>
+                  <span style={styles.userName}>{displayName}</span>
+                  <button
+                    onClick={handleLogout}
+                    style={{
+                      padding: "6px 14px",
+                      background: "transparent",
+                      border: "1.5px solid rgba(232,121,160,0.22)",
+                      borderRadius: "50px",
+                      color: "#a89bc2",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                      fontFamily: "'DM Sans', sans-serif"
+                    }}
+                  >
+                    Log out
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  style={{
+                    padding: "8px 20px",
+                    background: "linear-gradient(135deg, #be185d, #e879a0)",
+                    border: "none",
+                    borderRadius: "50px",
+                    color: "#fff",
+                    cursor: "pointer",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    fontFamily: "'DM Sans', sans-serif",
+                    boxShadow: "0 2px 12px rgba(190,24,93,0.35)"
+                  }}
+                >
+                  🌸 Sign up / Log in
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -2975,19 +3807,71 @@ export default function Home() {
             </div>
           )}
 
-          {/* Username */}
+          {/* Auth section */}
           <div
             style={{
-              padding: "8px 16px",
-              fontSize: "12px",
-              color: "#5b4d72"
+              height: "1px",
+              background: "rgba(232,121,160,0.15)",
+              margin: "8px 0"
             }}
-          >
-            Posting as{" "}
-            <span style={{ color: "#e879a0", fontWeight: 600 }}>
-              {displayName}
-            </span>
-          </div>
+          />
+          {isLoggedIn ? (
+            <div
+              style={{
+                padding: "4px 8px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between"
+              }}
+            >
+              <span style={{ fontSize: "12px", color: "#5b4d72" }}>
+                Signed in as{" "}
+                <span style={{ color: "#e879a0", fontWeight: 600 }}>
+                  {displayName}
+                </span>
+              </span>
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setMobileMenuOpen(false);
+                }}
+                style={{
+                  padding: "6px 14px",
+                  background: "transparent",
+                  border: "1.5px solid rgba(232,121,160,0.22)",
+                  borderRadius: "50px",
+                  color: "#a89bc2",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontFamily: "'DM Sans', sans-serif"
+                }}
+              >
+                Log out
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                setShowAuthModal(true);
+                setMobileMenuOpen(false);
+              }}
+              style={{
+                margin: "4px 8px 8px",
+                padding: "12px",
+                background: "linear-gradient(135deg, #be185d, #e879a0)",
+                border: "none",
+                borderRadius: "50px",
+                color: "#fff",
+                fontSize: "14px",
+                fontWeight: 700,
+                cursor: "pointer",
+                fontFamily: "'DM Sans', sans-serif",
+                boxShadow: "0 4px 18px rgba(190,24,93,0.4)"
+              }}
+            >
+              🌸 Sign up / Log in
+            </button>
+          )}
         </div>
       )}
       {/* ─────────────────────────────────────────────────────────────────── */}
@@ -3003,6 +3887,42 @@ export default function Home() {
       )}
       {currentPage === "about" && renderAbout()}
       {currentPage === "feedback" && renderFeedback()}
+
+      {/* ─── Auth Modals ─────────────────────────────────────────────────── */}
+      {showAuthModal && (
+        <AuthModal
+          onClose={() => setShowAuthModal(false)}
+          onSuccess={handleAuthSuccess}
+          anonUserId={anonSessionId}
+        />
+      )}
+      {showClaimModal && (
+        <ClaimPostsModal
+          anonUserId={pendingClaimAnonId}
+          newUserId={user?.id || ""}
+          displayName={displayName}
+          onDone={async () => {
+            setShowClaimModal(false);
+            setPendingClaimAnonId("");
+            if (user) {
+              await loadPosts(0, false, user.id);
+              await loadPostsToday(user.id);
+              await loadNotifications(user.id);
+            }
+            showNotification("Welcome to UnTale 🌸", "success");
+          }}
+        />
+      )}
+      {showGuestPrompt && (
+        <GuestPrompt
+          onSignUp={() => {
+            setShowGuestPrompt(false);
+            setShowAuthModal(true);
+          }}
+          onDismiss={() => setShowGuestPrompt(false)}
+        />
+      )}
+      {/* ─────────────────────────────────────────────────────────────────── */}
 
       {/* Toast notification */}
       {notification && (
@@ -3646,6 +4566,15 @@ if (typeof document !== "undefined") {
     @keyframes trayOpen {
       from { opacity: 0; transform: translateY(8px) scale(0.95); }
       to   { opacity: 1; transform: translateY(0)   scale(1);    }
+    }
+      .feature-tile {
+      transform: translateY(0);
+      will-change: transform;
+      transition: transform 0.35s ease, box-shadow 0.35s ease !important;
+    }
+    .feature-tile:hover {
+      transform: translateY(-8px) !important;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.35) !important;
     }
     @keyframes trailFade {
       0% { opacity: 0.75; transform: scale(1) rotate(0deg); }
