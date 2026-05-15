@@ -1143,6 +1143,22 @@ export default function Home() {
       document.removeEventListener("touchstart", handleOutsideClick);
     };
   }, [mobileMenuOpen]);
+  useEffect(() => {
+    if (!showNotifDropdown) return;
+    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
+      setShowNotifDropdown(false);
+    };
+    // small delay so the button click that opened it doesn't immediately close it
+    const timer = setTimeout(() => {
+      document.addEventListener("mousedown", handleOutsideClick);
+      document.addEventListener("touchstart", handleOutsideClick);
+    }, 50);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [showNotifDropdown]);
   // ─────────────────────────────────────────────────────────────────────────
 
   const loadNotifications = async (userId: string) => {
@@ -1609,16 +1625,10 @@ export default function Home() {
             type: "reply",
             post_id: postId,
             triggered_by: displayName,
-            // store the reply id so we can scroll to it
             reply_id: data?.id ?? null
           }
         ]);
       }
-      setReplyCounts((prev) => {
-        const next = new Map(prev);
-        next.set(postId, (next.get(postId) || 0) + 1);
-        return next;
-      });
       if (data) {
         setRepliesMap((prev) => {
           const next = new Map(prev);
@@ -1715,13 +1725,43 @@ export default function Home() {
 
   // ─── FIX 2: Notification navigation — go to post AND open/scroll to reply ──
   const handleNotifClick = async (n: any, closeMenus: () => void) => {
+    // Mark this single notification as read immediately in state
+    setNotifs((prev) =>
+      prev.map((notif) =>
+        notif.id === n.id ? { ...notif, read: true } : notif
+      )
+    );
+
+    // Persist to DB
+    await supabase.from("notifications").update({ read: true }).eq("id", n.id);
+
     closeMenus();
     setCurrentPage("feed");
 
-    // Small delay to let feed render
-    await new Promise((r) => setTimeout(r, 250));
+    // Wait for the post element to appear in the DOM (retry for up to 3s)
+    const waitForElement = (
+      id: string,
+      timeout = 3000
+    ): Promise<HTMLElement | null> => {
+      return new Promise((resolve) => {
+        const el = document.getElementById(id);
+        if (el) return resolve(el);
+        const observer = new MutationObserver(() => {
+          const found = document.getElementById(id);
+          if (found) {
+            observer.disconnect();
+            resolve(found);
+          }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+        setTimeout(() => {
+          observer.disconnect();
+          resolve(null);
+        }, timeout);
+      });
+    };
 
-    const postEl = document.getElementById(`post-${n.post_id}`);
+    const postEl = await waitForElement(`post-${n.post_id}`);
     if (postEl) {
       postEl.scrollIntoView({ behavior: "smooth", block: "center" });
       postEl.style.transition = "box-shadow 0.4s ease";
@@ -1731,15 +1771,12 @@ export default function Home() {
       }, 2000);
     }
 
-    // If it's a reply notification, open the reply thread and scroll to the reply
     if (n.type === "reply") {
-      // Make sure replies are loaded for this post
       setShowReplyId(n.post_id);
       if (!repliesMap.has(n.post_id)) {
         await loadReplies(n.post_id);
       }
 
-      // If we have a specific reply_id, scroll to it after replies render
       if (n.reply_id) {
         setTimeout(() => {
           const replyEl = document.getElementById(`reply-${n.reply_id}`);
@@ -1753,7 +1790,6 @@ export default function Home() {
           }
         }, 400);
       } else {
-        // No specific reply id — just scroll to the reply section
         setTimeout(() => {
           const replySection = document.getElementById(`replies-${n.post_id}`);
           if (replySection) {
@@ -2059,8 +2095,99 @@ export default function Home() {
       }
     );
 
+    // const channel = supabase
+    //   .channel("posts-feed")
+    //   .on(
+    //     "postgres_changes",
+    //     { event: "INSERT", schema: "public", table: "posts" },
+    //     (payload) => {
+    //       const newPost = payload.new as Post;
+    //       setPosts((prev) => {
+    //         if (prev.some((p) => p.id === newPost.id)) return prev;
+    //         return [newPost, ...prev];
+    //       });
+    //       setLikesCount((prev) => {
+    //         const next = new Map(prev);
+    //         if (!next.has(newPost.id)) next.set(newPost.id, 0);
+    //         return next;
+    //       });
+    //     }
+    //   )
+    //   .on(
+    //     "postgres_changes",
+    //     { event: "INSERT", schema: "public", table: "likes" },
+    //     (payload) => {
+    //       const newLike = payload.new as any;
+    //       if (newLike.user_id === userRef.current?.id) return;
+    //       setLikesCount((prev) => {
+    //         const next = new Map(prev);
+    //         next.set(newLike.post_id, (next.get(newLike.post_id) || 0) + 1);
+    //         return next;
+    //       });
+    //     }
+    //   )
+    //   .on(
+    //     "postgres_changes",
+    //     { event: "DELETE", schema: "public", table: "likes" },
+    //     (payload) => {
+    //       const oldLike = payload.old as any;
+    //       if (oldLike.user_id === userRef.current?.id) return;
+    //       setLikesCount((prev) => {
+    //         const next = new Map(prev);
+    //         next.set(
+    //           oldLike.post_id,
+    //           Math.max(0, (next.get(oldLike.post_id) || 0) - 1)
+    //         );
+    //         return next;
+    //       });
+    //     }
+    //   )
+    //   .on(
+    //     "postgres_changes",
+    //     { event: "INSERT", schema: "public", table: "replies" },
+    //     (payload) => {
+    //       const postId = (payload.new as any).post_id;
+    //       const newReply = payload.new as any;
+    //       // setReplyCounts((prev) => {
+    //       //   const next = new Map(prev);
+    //       //   next.set(postId, (next.get(postId) || 0) + 1);
+    //       //   return next;
+    //       // });
+    //       setRepliesMap((prev) => {
+    //         const next = new Map(prev);
+    //         if (next.has(postId)) {
+    //           const existing = next.get(postId) || [];
+    //           if (!existing.find((r: any) => r.id === newReply.id)) {
+    //             next.set(postId, [...existing, newReply]);
+    //           }
+    //         }
+    //         return next;
+    //       });
+    //     }
+    //   )
+    //   .on(
+    //     "postgres_changes",
+    //     { event: "INSERT", schema: "public", table: "notifications" },
+    //     (payload) => {
+    //       // userRef.current is always current because it's a ref
+    //       if (
+    //         userRef.current &&
+    //         (payload.new as any).user_id === userRef.current.id
+    //       ) {
+    //         setNotifs((prev) => [payload.new as any, ...prev]);
+    //       }
+    //     }
+    //   )
+    //   .subscribe();
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
+  useEffect(() => {
+    if (!user) return;
+
     const channel = supabase
-      .channel("posts-feed")
+      .channel(`posts-feed-${user.id}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "posts" },
@@ -2082,7 +2209,7 @@ export default function Home() {
         { event: "INSERT", schema: "public", table: "likes" },
         (payload) => {
           const newLike = payload.new as any;
-          if (newLike.user_id === userRef.current?.id) return;
+          if (newLike.user_id === user.id) return;
           setLikesCount((prev) => {
             const next = new Map(prev);
             next.set(newLike.post_id, (next.get(newLike.post_id) || 0) + 1);
@@ -2095,7 +2222,7 @@ export default function Home() {
         { event: "DELETE", schema: "public", table: "likes" },
         (payload) => {
           const oldLike = payload.old as any;
-          if (oldLike.user_id === userRef.current?.id) return;
+          if (oldLike.user_id === user.id) return;
           setLikesCount((prev) => {
             const next = new Map(prev);
             next.set(
@@ -2133,17 +2260,17 @@ export default function Home() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications" },
         (payload) => {
-          if ((payload.new as any).user_id === userRef.current?.id) {
-            setNotifs((prev) => [payload.new, ...prev]);
+          if ((payload.new as any).user_id === user.id) {
+            setNotifs((prev) => [payload.new as any, ...prev]);
           }
         }
       )
       .subscribe();
+
     return () => {
-      listener.subscription.unsubscribe();
       channel.unsubscribe();
     };
-  }, []);
+  }, [user]); // <-- this is the key part, it re-runs whenever user changes
 
   if (sessionLoading) {
     return (
